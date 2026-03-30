@@ -174,11 +174,11 @@ body {
         <div class="heart" id="heart"></div>
 
         <!-- OBJECTS -->
-        <div class="object bed" style="top:40px; left:40px;" data-text="Your bed."></div>
-        <div class="object table" style="top:100px; left:40px;" data-text="A laptop sits here."></div>
+        <div class="object bed" style="top:40px; left:40px;" data-text="Your bed." data-radius="70"></div>
+        <div class="object table" style="top:100px; left:40px;" data-text="A laptop sits here." data-radius="60"></div>
+        <div class="object door" style="top:250px; left:550px;" data-text="Exit door." data-radius="80"></div>
         <div class="object drawer" style="top:40px; left:150px;" data-text="Clothes inside."></div>
         <div class="object carpet" style="top:250px; left:200px;" data-text="Soft carpet."></div>
-        <div class="object door" style="top:250px; left:550px;" data-text="Exit door."></div>
         <div class="object gym" style="top:600px; left:200px;" data-text="Workout area."></div>
 
     </div>
@@ -274,9 +274,13 @@ function interact() {
     for (let obj of objects) {
         const ox = obj.offsetLeft + (parseInt(obj.dataset.offsetX) || 0);
         const oy = obj.offsetTop + (parseInt(obj.dataset.offsetY) || 0);
+
+        // Define an interaction radius (larger than collision)
+        const interactRadius = (parseInt(obj.dataset.radius) || 50);
+
         const d = Math.hypot(x - ox, y - oy);
 
-        if (d < 70) {
+        if (d < interactRadius) {
             const text = obj.dataset.text;
 
             // Special case for door
