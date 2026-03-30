@@ -25,27 +25,39 @@ body {
     border-radius: 20px;
 }
 
-/* Pixel heart */
+@keyframes heartbeat {
+    0%   { transform: scale(1); }
+    10%  { transform: scale(1.15); }
+    20%  { transform: scale(1); }
+    30%  { transform: scale(1.1); }
+    40%  { transform: scale(1); }
+    100% { transform: scale(1); }
+}
+
+.heart {
+    animation: heartbeat 1.2s infinite;
+    transform-origin: center;
+}    
+/* Pixel heart 
 .heart {
     position: absolute;
     width: 6px;
     height: 6px;
     background: red;
 
-    /* Pixel heart with black outline */
+    
     box-shadow:
-    /* --- BLACK OUTLINE --- */
+    
     6px 0 black, 12px 0 black, 18px 0 black, 24px 0 black,
     0 6px black, 30px 6px black,
     0 12px black, 30px 12px black,
     6px 18px black, 24px 18px black,
     12px 24px black, 18px 24px black,
 
-    /* --- RED FILL --- */
     12px 6px red, 18px 6px red,
     6px 12px red, 12px 12px red, 18px 12px red, 24px 12px red,
     6px 18px red, 12px 18px red, 18px 18px red, 24px 18px red;
-}
+} */
 
 /* Objects */
 .object {
@@ -184,6 +196,8 @@ function update() {
 update();
 
 /* Interaction check */
+let dialogTimeout;
+
 function interact() {
     for (let obj of objects) {
         const ox = obj.offsetLeft;
@@ -192,8 +206,25 @@ function interact() {
         const distance = Math.hypot(x - ox, y - oy);
 
         if (distance < 60) {
-            dialog.innerText = obj.dataset.text;
+            const text = obj.dataset.text;
+
+            // Show dialog
+            dialog.innerText = text;
             dialog.style.display = "block";
+
+            // Clear previous timeout if exists
+            clearTimeout(dialogTimeout);
+
+            // Count words
+            const wordCount = text.trim().split(/\s+/).length;
+
+            // 1 word = 1 second
+            const duration = wordCount * 1000;
+
+            dialogTimeout = setTimeout(() => {
+                dialog.style.display = "none";
+            }, duration);
+
             return;
         }
     }
