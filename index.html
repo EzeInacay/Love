@@ -59,24 +59,24 @@ body {
 /* Dialog box */
 .dialog {
     position: absolute;
-    bottom: 0;
+    top: 0;
     width: 100%;
     background: rgba(0,0,0,0.85);
     color: white;
     padding: 15px;
     font-size: 14px;
     display: none;
+    box-sizing: border-box;
 }
 
-/* Controls */
 .controls {
     position: absolute;
-    bottom: 80px;
+    bottom: 20px;
     left: 20px;
     display: grid;
-    grid-template-columns: repeat(3, 55px);
-    grid-template-rows: repeat(2, 55px);
-    gap: 6px;
+    grid-template-columns: repeat(3, 50px);
+    grid-template-rows: repeat(2, 50px);
+    gap: 8px;
 }
 
 .btn {
@@ -84,9 +84,13 @@ body {
     color: white;
     border: none;
     border-radius: 12px;
-    font-size: 20px;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
+/* Arrow layout */
 .up { grid-column: 2; grid-row: 1; }
 .left { grid-column: 1; grid-row: 2; }
 .down { grid-column: 2; grid-row: 2; }
@@ -95,15 +99,34 @@ body {
 /* Interact button */
 .interact {
     position: absolute;
-    bottom: 20px;
-    right: 20px;
+    bottom: 25px;
+    right: 25px;
     width: 70px;
-    height: 50px;
-    background: #ffcc00;
-    border: none;
-    border-radius: 10px;
-    font-weight: bold;
+    height: 70px;
+    background: #222;
+    border-radius: 50%;
+    border: 3px solid #555;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
+
+/* Inner circle */
+.interact::after {
+    content: "";
+    width: 30px;
+    height: 30px;
+    background: #ffcc00;
+    border-radius: 50%;
+}
+.interact:active::after {
+    transform: scale(0.85);
+}
+
+.btn:active {
+    transform: scale(0.9);
+}
+    
 </style>
 </head>
 
