@@ -27,19 +27,10 @@ body {
 
 /* WORLD (smaller now) */
 .world {
-    width: 600px;
-    height: 700px;
+    width: 500px;
+    height: 600px;
     position: absolute;
     background: #2a2a3d;
-}
-
-/* LIGHTING */
-.light {
-    position: absolute;
-    width: 200px;
-    height: 200px;
-    pointer-events: none;
-    background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, rgba(0,0,0,0.9) 70%);
 }
 
 /* PLAYER */
@@ -175,12 +166,17 @@ body {
 
         <!-- OBJECTS -->
         <div class="object bed" style="top:40px; left:40px;" data-text="Your bed." data-radius="70"></div>
-        <div class="object table" style="top:100px; left:40px;" data-text="A laptop sits here." data-radius="60"></div>
+        <div class="object table" 
+         style="top:100px; left:40px; width:40px; height:120px;" 
+         data-text="A laptop sits here." 
+         data-radius="60"></div>
         <div class="object door" style="top:250px; left:550px;" data-text="Exit door." data-radius="80"></div>
         <div class="object drawer" style="top:40px; left:150px;" data-text="Clothes inside."></div>
-        <div class="object carpet" style="top:250px; left:200px;" data-text="Soft carpet."></div>
+        <div class="object carpet" style="top:250px; left:200px;" 
+         data-text="Soft carpet." 
+         data-collidable="false" 
+         data-radius="70"></div>
         <div class="object gym" style="top:600px; left:200px;" data-text="Workout area."></div>
-
     </div>
 
     <div class="dialog" id="dialog"></div>
@@ -212,6 +208,9 @@ let keys = {up:false,down:false,left:false,right:false};
 /* COLLISION CHECK */
 function isColliding(nx, ny) {
     for (let obj of objects) {
+        // Skip non-collidable objects
+        if (obj.dataset.collidable === "false") continue;
+
         const r = obj.getBoundingClientRect();
         const wr = world.getBoundingClientRect();
 
