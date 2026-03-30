@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pixel Heart Game</title>
+<title>Story Game</title>
 
 <style>
 body {
@@ -15,7 +15,7 @@ body {
     height: 100vh;
 }
 
-/* Portrait container */
+/* Game container */
 .game {
     width: 360px;
     height: 640px;
@@ -25,7 +25,7 @@ body {
     border-radius: 20px;
 }
 
-/* Pixel Heart */
+/* Pixel heart */
 .heart {
     position: absolute;
     width: 20px;
@@ -39,10 +39,31 @@ body {
         20px 60px red, 40px 60px red;
 }
 
+/* Objects */
+.object {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    background: #6cf;
+    border-radius: 8px;
+}
+
+/* Dialog box */
+.dialog {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    background: rgba(0,0,0,0.85);
+    color: white;
+    padding: 15px;
+    font-size: 14px;
+    display: none;
+}
+
 /* Controls */
 .controls {
     position: absolute;
-    bottom: 20px;
+    bottom: 80px;
     left: 20px;
     display: grid;
     grid-template-columns: repeat(3, 55px);
@@ -56,17 +77,25 @@ body {
     border: none;
     border-radius: 12px;
     font-size: 20px;
-    user-select: none;
-}
-
-.btn:active {
-    background: #777;
 }
 
 .up { grid-column: 2; grid-row: 1; }
 .left { grid-column: 1; grid-row: 2; }
 .down { grid-column: 2; grid-row: 2; }
 .right { grid-column: 3; grid-row: 2; }
+
+/* Interact button */
+.interact {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    width: 70px;
+    height: 50px;
+    background: #ffcc00;
+    border: none;
+    border-radius: 10px;
+    font-weight: bold;
+}
 </style>
 </head>
 
@@ -75,59 +104,79 @@ body {
 <div class="game" id="game">
     <div class="heart" id="heart"></div>
 
+    <!-- Objects -->
+    <div class="object" style="top:100px; left:100px;" data-text="A dying tree. The air feels heavy."></div>
+    <div class="object" style="top:300px; left:200px;" data-text="Plastic waste... no one cleaned this for years."></div>
+    <div class="object" style="top:200px; left:50px;" data-text="The river used to be clear here."></div>
+
+    <!-- Dialog -->
+    <div class="dialog" id="dialog"></div>
+
+    <!-- Controls -->
     <div class="controls">
         <button class="btn up">↑</button>
         <button class="btn left">←</button>
         <button class="btn down">↓</button>
         <button class="btn right">→</button>
     </div>
+
+    <button class="interact">E</button>
 </div>
 
 <script>
 const heart = document.getElementById("heart");
 const game = document.getElementById("game");
+const dialog = document.getElementById("dialog");
+const objects = document.querySelectorAll(".object");
 
-let x = game.clientWidth / 2;
-let y = game.clientHeight / 2;
+let x = 150;
+let y = 300;
+const speed = 2;
 
-const speed = 3;
+let keys = { up:false, down:false, left:false, right:false };
 
-/* Movement state */
-let keys = {
-    up: false,
-    down: false,
-    left: false,
-    right: false
-};
-
-/* Smooth animation loop */
+/* Movement loop */
 function update() {
     if (keys.up) y -= speed;
     if (keys.down) y += speed;
     if (keys.left) x -= speed;
     if (keys.right) x += speed;
 
-    // boundaries
-    const maxX = game.clientWidth - 60;
-    const maxY = game.clientHeight - 60;
-
-    x = Math.max(0, Math.min(maxX, x));
-    y = Math.max(0, Math.min(maxY, y));
+    x = Math.max(0, Math.min(game.clientWidth - 60, x));
+    y = Math.max(0, Math.min(game.clientHeight - 60, y));
 
     heart.style.left = x + "px";
     heart.style.top = y + "px";
 
     requestAnimationFrame(update);
 }
-
 update();
 
-/* Keyboard controls */
+/* Interaction check */
+function interact() {
+    for (let obj of objects) {
+        const ox = obj.offsetLeft;
+        const oy = obj.offsetTop;
+
+        const distance = Math.hypot(x - ox, y - oy);
+
+        if (distance < 60) {
+            dialog.innerText = obj.dataset.text;
+            dialog.style.display = "block";
+            return;
+        }
+    }
+
+    dialog.style.display = "none";
+}
+
+/* Keyboard */
 document.addEventListener("keydown", e => {
     if (e.key === "ArrowUp") keys.up = true;
     if (e.key === "ArrowDown") keys.down = true;
     if (e.key === "ArrowLeft") keys.left = true;
     if (e.key === "ArrowRight") keys.right = true;
+    if (e.key.toLowerCase() === "e") interact();
 });
 
 document.addEventListener("keyup", e => {
@@ -137,36 +186,21 @@ document.addEventListener("keyup", e => {
     if (e.key === "ArrowRight") keys.right = false;
 });
 
-/* Mobile hold controls */
-function bindButton(selector, key) {
-    const btn = document.querySelector(selector);
-
-    btn.addEventListener("touchstart", e => {
-        e.preventDefault();
-        keys[key] = true;
-    });
-
-    btn.addEventListener("touchend", () => {
-        keys[key] = false;
-    });
-
-    btn.addEventListener("mousedown", () => {
-        keys[key] = true;
-    });
-
-    btn.addEventListener("mouseup", () => {
-        keys[key] = false;
-    });
-
-    btn.addEventListener("mouseleave", () => {
-        keys[key] = false;
-    });
+/* Mobile controls */
+function bind(btn, key) {
+    btn.addEventListener("touchstart", e => { e.preventDefault(); keys[key]=true; });
+    btn.addEventListener("touchend", () => keys[key]=false);
+    btn.addEventListener("mousedown", () => keys[key]=true);
+    btn.addEventListener("mouseup", () => keys[key]=false);
 }
 
-bindButton(".up", "up");
-bindButton(".down", "down");
-bindButton(".left", "left");
-bindButton(".right", "right");
+bind(document.querySelector(".up"), "up");
+bind(document.querySelector(".down"), "down");
+bind(document.querySelector(".left"), "left");
+bind(document.querySelector(".right"), "right");
+
+/* Interact button */
+document.querySelector(".interact").addEventListener("click", interact);
 </script>
 
 </body>
