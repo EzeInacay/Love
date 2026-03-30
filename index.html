@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Undertale Room</title>
+<title>Room Game</title>
 
 <style>
 body {
@@ -15,25 +15,34 @@ body {
     height: 100vh;
 }
 
-/* CAMERA VIEWPORT */
+/* CAMERA */
 .game {
     width: 360px;
     height: 640px;
     overflow: hidden;
     position: relative;
-    background: #111;
+    background: black;
     border-radius: 20px;
 }
 
-/* WORLD (bigger than screen) */
+/* WORLD (smaller now) */
 .world {
-    width: 800px;
-    height: 1000px;
+    width: 600px;
+    height: 700px;
     position: absolute;
     background: #2a2a3d;
 }
 
-/* Player */
+/* LIGHTING */
+.light {
+    position: absolute;
+    width: 200px;
+    height: 200px;
+    pointer-events: none;
+    background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, rgba(0,0,0,0.9) 70%);
+}
+
+/* PLAYER */
 .heart {
     position: absolute;
     width: 6px;
@@ -51,20 +60,49 @@ body {
         6px 18px red, 12px 18px red, 18px 18px red, 24px 18px red;
 }
 
-/* Simple pixel furniture */
+/* PIXEL OBJECTS */
 .object {
     position: absolute;
-    background: #888;
-    border: 2px solid #000;
 }
 
-/* Specific objects */
-.bed { width: 120px; height: 60px; background: #c66; }
-.table { width: 140px; height: 40px; background: #964; }
-.drawer { width: 60px; height: 60px; background: #bbb; }
-.carpet { width: 200px; height: 120px; background: #446; }
-.door { width: 40px; height: 80px; background: #663; }
-.gym { width: 140px; height: 40px; background: #999; }
+/* Bed */
+.bed {
+    width: 100px; height: 50px;
+    background: #c66;
+    box-shadow: inset 0 0 0 2px black;
+}
+
+/* Table */
+.table {
+    width: 120px; height: 40px;
+    background: #964;
+    box-shadow: inset 0 0 0 2px black;
+}
+
+/* Drawer */
+.drawer {
+    width: 50px; height: 50px;
+    background: #bbb;
+    box-shadow: inset 0 0 0 2px black;
+}
+
+/* Carpet */
+.carpet {
+    width: 160px; height: 100px;
+    background: #446;
+}
+
+/* Door */
+.door {
+    width: 40px; height: 70px;
+    background: #663;
+}
+
+/* Gym */
+.gym {
+    width: 120px; height: 30px;
+    background: #999;
+}
 
 /* Dialog */
 .dialog {
@@ -77,26 +115,32 @@ body {
     display: none;
 }
 
-/* Controls */
+/* CONTROLS (FIXED) */
 .controls {
     position: absolute;
     bottom: 20px;
     left: 20px;
     display: grid;
-    grid-template-columns: repeat(3, 50px);
-    grid-template-rows: repeat(2, 50px);
-    gap: 8px;
+    grid-template-columns: 50px 50px 50px;
+    grid-template-rows: 50px 50px;
+    gap: 6px;
     z-index: 10;
 }
 
 .btn {
-    background: #444;
+    background: #333;
     color: white;
     border: none;
     border-radius: 10px;
+    font-size: 18px;
 }
 
-/* Interact */
+.up { grid-column: 2; grid-row: 1; }
+.left { grid-column: 1; grid-row: 2; }
+.down { grid-column: 2; grid-row: 2; }
+.right { grid-column: 3; grid-row: 2; }
+
+/* INTERACT BUTTON */
 .interact {
     position: absolute;
     bottom: 25px;
@@ -126,34 +170,21 @@ body {
 <div class="game" id="game">
     <div class="world" id="world">
 
-        <!-- PLAYER -->
+        <div class="light" id="light"></div>
         <div class="heart" id="heart"></div>
 
-        <!-- ROOM LAYOUT -->
-
-        <!-- Bed (top-left) -->
-        <div class="object bed" style="top:50px; left:50px;" data-text="Your bed. You barely slept."></div>
-
-        <!-- Table below bed -->
-        <div class="object table" style="top:120px; left:50px;" data-text="A laptop. Still open... still running."></div>
-
-        <!-- Drawer at foot -->
-        <div class="object drawer" style="top:50px; left:180px;" data-text="Clothes. Some still unworn."></div>
-
-        <!-- Carpet center -->
-        <div class="object carpet" style="top:300px; left:250px;" data-text="The only clean thing in the room."></div>
-
-        <!-- Door right -->
-        <div class="object door" style="top:300px; left:740px;" data-text="You could leave... but not yet."></div>
-
-        <!-- Gym bottom -->
-        <div class="object gym" style="top:850px; left:300px;" data-text="You tried to stay disciplined."></div>
+        <!-- OBJECTS -->
+        <div class="object bed" style="top:40px; left:40px;" data-text="Your bed."></div>
+        <div class="object table" style="top:100px; left:40px;" data-text="A laptop sits here."></div>
+        <div class="object drawer" style="top:40px; left:150px;" data-text="Clothes inside."></div>
+        <div class="object carpet" style="top:250px; left:200px;" data-text="Soft carpet."></div>
+        <div class="object door" style="top:250px; left:550px;" data-text="Exit door."></div>
+        <div class="object gym" style="top:600px; left:200px;" data-text="Workout area."></div>
 
     </div>
 
     <div class="dialog" id="dialog"></div>
 
-    <!-- Controls -->
     <div class="controls">
         <button class="btn up">↑</button>
         <button class="btn left">←</button>
@@ -169,6 +200,8 @@ const heart = document.getElementById("heart");
 const world = document.getElementById("world");
 const game = document.getElementById("game");
 const dialog = document.getElementById("dialog");
+const light = document.getElementById("light");
+
 const objects = document.querySelectorAll(".object");
 
 let x = 200, y = 200;
@@ -176,19 +209,47 @@ const speed = 2;
 
 let keys = {up:false,down:false,left:false,right:false};
 
-/* GAME LOOP */
-function update() {
-    if (keys.up) y -= speed;
-    if (keys.down) y += speed;
-    if (keys.left) x -= speed;
-    if (keys.right) x += speed;
+/* COLLISION CHECK */
+function isColliding(nx, ny) {
+    for (let obj of objects) {
+        const r = obj.getBoundingClientRect();
+        const wr = world.getBoundingClientRect();
 
-    // WORLD BOUNDS
+        const ox = r.left - wr.left;
+        const oy = r.top - wr.top;
+
+        if (
+            nx < ox + obj.offsetWidth &&
+            nx + 20 > ox &&
+            ny < oy + obj.offsetHeight &&
+            ny + 20 > oy
+        ) return true;
+    }
+    return false;
+}
+
+/* LOOP */
+function update() {
+    let nx = x;
+    let ny = y;
+
+    if (keys.up) ny -= speed;
+    if (keys.down) ny += speed;
+    if (keys.left) nx -= speed;
+    if (keys.right) nx += speed;
+
+    if (!isColliding(nx, y)) x = nx;
+    if (!isColliding(x, ny)) y = ny;
+
     x = Math.max(0, Math.min(world.clientWidth - 30, x));
     y = Math.max(0, Math.min(world.clientHeight - 30, y));
 
     heart.style.left = x + "px";
     heart.style.top = y + "px";
+
+    /* LIGHT follows player */
+    light.style.left = (x - 100) + "px";
+    light.style.top = (y - 100) + "px";
 
     updateCamera();
 
@@ -196,62 +257,54 @@ function update() {
 }
 update();
 
-/* CAMERA SYSTEM */
+/* CAMERA */
 function updateCamera() {
     let camX = x - game.clientWidth / 2;
     let camY = y - game.clientHeight / 2;
 
-    // Clamp camera to world edges
     camX = Math.max(0, Math.min(world.clientWidth - game.clientWidth, camX));
     camY = Math.max(0, Math.min(world.clientHeight - game.clientHeight, camY));
 
     world.style.transform = `translate(${-camX}px, ${-camY}px)`;
 }
 
-/* INTERACTION */
-let timeout;
-
+/* INTERACT */
+let t;
 function interact() {
     for (let obj of objects) {
         const ox = obj.offsetLeft;
         const oy = obj.offsetTop;
+        const d = Math.hypot(x - ox, y - oy);
 
-        const dist = Math.hypot(x - ox, y - oy);
-
-        if (dist < 80) {
+        if (d < 70) {
             const text = obj.dataset.text;
             dialog.innerText = text;
             dialog.style.display = "block";
 
-            clearTimeout(timeout);
-            const words = text.split(" ").length;
-            timeout = setTimeout(() => {
-                dialog.style.display = "none";
-            }, words * 1000);
-
+            clearTimeout(t);
+            t = setTimeout(()=>dialog.style.display="none", text.split(" ").length * 1000);
             return;
         }
     }
 }
 
 /* INPUT */
-document.addEventListener("keydown", e => {
-    if (e.key==="ArrowUp") keys.up=true;
-    if (e.key==="ArrowDown") keys.down=true;
-    if (e.key==="ArrowLeft") keys.left=true;
-    if (e.key==="ArrowRight") keys.right=true;
-    if (e.key==="e") interact();
+document.addEventListener("keydown", e=>{
+    if(e.key==="ArrowUp") keys.up=true;
+    if(e.key==="ArrowDown") keys.down=true;
+    if(e.key==="ArrowLeft") keys.left=true;
+    if(e.key==="ArrowRight") keys.right=true;
+    if(e.key==="e") interact();
 });
-
-document.addEventListener("keyup", e => {
-    if (e.key==="ArrowUp") keys.up=false;
-    if (e.key==="ArrowDown") keys.down=false;
-    if (e.key==="ArrowLeft") keys.left=false;
-    if (e.key==="ArrowRight") keys.right=false;
+document.addEventListener("keyup", e=>{
+    if(e.key==="ArrowUp") keys.up=false;
+    if(e.key==="ArrowDown") keys.down=false;
+    if(e.key==="ArrowLeft") keys.left=false;
+    if(e.key==="ArrowRight") keys.right=false;
 });
 
 /* MOBILE */
-function bind(sel, key){
+function bind(sel,key){
     const b=document.querySelector(sel);
     b.addEventListener("touchstart",e=>{e.preventDefault();keys[key]=true});
     b.addEventListener("touchend",()=>keys[key]=false);
