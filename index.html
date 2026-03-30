@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Room Game</title>
+
+<style>
+body {
+    margin: 0;
+    background: black;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+/* CAMERA */
+.game {
+    width: 360px;
+    height: 640px;
+    overflow: hidden;
+    position: relative;
+    background: black;
+    border-radius: 20px;
+}
+
+/* WORLD (smaller now) */
+.world {
+    width: 500px;
+    height: 600px;
+    position: absolute;
+    background: #2a2a3d;
+}
+
+/* PLAYER */
+.heart {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    background: red;
+    box-shadow:
+        6px 0 black, 12px 0 black, 18px 0 black, 24px 0 black,
+        0 6px black, 30px 6px black,
+        0 12px black, 30px 12px black,
+        6px 18px black, 24px 18px black,
+        12px 24px black, 18px 24px black,
+
+        12px 6px red, 18px 6px red,
+        6px 12px red, 12px 12px red, 18px 12px red, 24px 12px red,
+        6px 18px red, 12px 18px red, 18px 18px red, 24px 18px red;
+}
+
+/* PIXEL OBJECTS */
+.object {
+    position: absolute;
+}
+
+/* Bed */
+.bed {
+    width: 100px; height: 50px;
+    background: #c66;
+    box-shadow: inset 0 0 0 2px black;
+}
+
+/* Table */
+.table {
+    width: 120px; height: 40px;
+    background: #964;
+    box-shadow: inset 0 0 0 2px black;
+}
+
+/* Drawer */
+.drawer {
+    width: 50px; height: 50px;
+    background: #bbb;
+    box-shadow: inset 0 0 0 2px black;
+}
+
+/* Carpet */
+.carpet {
+    width: 160px; height: 100px;
+    background: #446;
+}
+
+/* Door */
+.door {
+    width: 40px; height: 70px;
+    background: #663;
+}
+
+/* Gym */
+.gym {
+    width: 120px; height: 30px;
+    background: #999;
+}
+
+/* Dialog */
+.dialog {
+    position: absolute;
+    top: 0;
+    width: 100%;
+    background: rgba(0,0,0,0.85);
+    color: white;
+    padding: 10px;
+    display: none;
+}
+
+/* CONTROLS (FIXED) */
+.controls {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    display: grid;
+    grid-template-columns: 50px 50px 50px;
+    grid-template-rows: 50px 50px;
+    gap: 6px;
+    z-index: 10;
+}
+
+.btn {
+    background: #333;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 18px;
+}
+
+.up { grid-column: 2; grid-row: 1; }
+.left { grid-column: 1; grid-row: 2; }
+.down { grid-column: 2; grid-row: 2; }
+.right { grid-column: 3; grid-row: 2; }
+
+/* INTERACT BUTTON */
+.interact {
+    position: absolute;
+    bottom: 25px;
+    right: 25px;
+    width: 70px;
+    height: 70px;
+    background: #222;
+    border-radius: 50%;
+    border: 3px solid #555;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.interact::after {
+    content: "";
+    width: 30px;
+    height: 30px;
+    background: #ffcc00;
+    border-radius: 50%;
+}
+</style>
+</head>
+
+<body>
+
+<div class="game" id="game">
+    <div class="world" id="world">
+
+        <div class="light" id="light"></div>
+        <div class="heart" id="heart"></div>
+
+        <!-- OBJECTS -->
+        <div class="object bed" style="top:40px; left:40px;" data-text="Your bed." data-radius="70"></div>
+        <div class="object table" 
+         style="top:100px; left:40px; width:40px; height:120px;" 
+         data-text="A laptop sits here." 
+         data-radius="60"></div>
+        <div class="object door" style="top:250px; left:550px;" data-text="Exit door." data-radius="80"></div>
+        <div class="object drawer" style="top:40px; left:150px;" data-text="Clothes inside."></div>
+        <div class="object carpet" style="top:250px; left:200px;" 
+         data-text="Soft carpet." 
+         data-collidable="false" 
+         data-radius="70"></div>
+        <div class="object gym" style="top:600px; left:200px;" data-text="Workout area."></div>
+    </div>
+
+    <div class="dialog" id="dialog"></div>
+
+    <div class="controls">
+        <button class="btn up">↑</button>
+        <button class="btn left">←</button>
+        <button class="btn down">↓</button>
+        <button class="btn right">→</button>
+    </div>
+
+    <button class="interact"></button>
+</div>
+
+<script>
+const heart = document.getElementById("heart");
+const world = document.getElementById("world");
+const game = document.getElementById("game");
+const dialog = document.getElementById("dialog");
+const light = document.getElementById("light");
+
+const objects = document.querySelectorAll(".object");
+
+let x = 200, y = 200;
+const speed = 2;
+
+let keys = {up:false,down:false,left:false,right:false};
+
+/* COLLISION CHECK */
+function isColliding(nx, ny) {
+    for (let obj of objects) {
+        // Skip non-collidable objects
+        if (obj.dataset.collidable === "false") continue;
+
+        const r = obj.getBoundingClientRect();
+        const wr = world.getBoundingClientRect();
+
+        const ox = r.left - wr.left;
+        const oy = r.top - wr.top;
+
+        if (
+            nx < ox + obj.offsetWidth &&
+            nx + 20 > ox &&
+            ny < oy + obj.offsetHeight &&
+            ny + 20 > oy
+        ) return true;
+    }
+    return false;
+}
+
+/* LOOP */
+function update() {
+    let nx = x;
+    let ny = y;
+
+    if (keys.up) ny -= speed;
+    if (keys.down) ny += speed;
+    if (keys.left) nx -= speed;
+    if (keys.right) nx += speed;
+
+    if (!isColliding(nx, y)) x = nx;
+    if (!isColliding(x, ny)) y = ny;
+
+    x = Math.max(0, Math.min(world.clientWidth - 30, x));
+    y = Math.max(0, Math.min(world.clientHeight - 30, y));
+
+    heart.style.left = x + "px";
+    heart.style.top = y + "px";
+
+    /* LIGHT follows player */
+    light.style.left = (x - 100) + "px";
+    light.style.top = (y - 100) + "px";
+
+    updateCamera();
+
+    requestAnimationFrame(update);
+}
+update();
+
+/* CAMERA */
+function updateCamera() {
+    let camX = x - game.clientWidth / 2;
+    let camY = y - game.clientHeight / 2;
+
+    camX = Math.max(0, Math.min(world.clientWidth - game.clientWidth, camX));
+    camY = Math.max(0, Math.min(world.clientHeight - game.clientHeight, camY));
+
+    world.style.transform = `translate(${-camX}px, ${-camY}px)`;
+}
+
+/* INTERACT */
+let t;
+function interact() {
+    for (let obj of objects) {
+        const ox = obj.offsetLeft + (parseInt(obj.dataset.offsetX) || 0);
+        const oy = obj.offsetTop + (parseInt(obj.dataset.offsetY) || 0);
+
+        // Define an interaction radius (larger than collision)
+        const interactRadius = (parseInt(obj.dataset.radius) || 50);
+
+        const d = Math.hypot(x - ox, y - oy);
+
+        if (d < interactRadius) {
+            const text = obj.dataset.text;
+
+            // Special case for door
+            if (obj.classList.contains("door")) {
+                dialog.innerHTML = `${text} <br><button id="go-out">Go Outside</button>`;
+                document.getElementById("go-out").onclick = () => {
+                    window.location.href = "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
+                };
+            } else {
+                dialog.innerText = text;
+            }
+
+            dialog.style.display = "block";
+            clearTimeout(t);
+            t = setTimeout(() => dialog.style.display = "none", text.split(" ").length * 1000);
+
+            return;
+        }
+    }
+}
+
+/* INPUT */
+document.addEventListener("keydown", e=>{
+    if(e.key==="ArrowUp") keys.up=true;
+    if(e.key==="ArrowDown") keys.down=true;
+    if(e.key==="ArrowLeft") keys.left=true;
+    if(e.key==="ArrowRight") keys.right=true;
+    if(e.key==="e") interact();
+});
+document.addEventListener("keyup", e=>{
+    if(e.key==="ArrowUp") keys.up=false;
+    if(e.key==="ArrowDown") keys.down=false;
+    if(e.key==="ArrowLeft") keys.left=false;
+    if(e.key==="ArrowRight") keys.right=false;
+});
+
+/* MOBILE */
+function bind(sel,key){
+    const b=document.querySelector(sel);
+    b.addEventListener("touchstart",e=>{e.preventDefault();keys[key]=true});
+    b.addEventListener("touchend",()=>keys[key]=false);
+    b.addEventListener("mousedown",()=>keys[key]=true);
+    b.addEventListener("mouseup",()=>keys[key]=false);
+}
+bind(".up","up"); bind(".down","down"); bind(".left","left"); bind(".right","right");
+
+document.querySelector(".interact").onclick = interact;
+</script>
+
+</body>
+</html>
