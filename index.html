@@ -3,84 +3,81 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Story Game</title>
+<title>Undertale Room</title>
 
 <style>
 body {
     margin: 0;
-    background: #111;
+    background: black;
     display: flex;
     justify-content: center;
     align-items: center;
     height: 100vh;
 }
 
-/* Game container */
+/* CAMERA VIEWPORT */
 .game {
     width: 360px;
     height: 640px;
-    background: #1e1e2f;
-    position: relative;
     overflow: hidden;
+    position: relative;
+    background: #111;
     border-radius: 20px;
 }
 
-@keyframes heartbeat {
-    0%   { transform: scale(1); }
-    10%  { transform: scale(1.15); }
-    20%  { transform: scale(1); }
-    30%  { transform: scale(1.1); }
-    40%  { transform: scale(1); }
-    100% { transform: scale(1); }
+/* WORLD (bigger than screen) */
+.world {
+    width: 800px;
+    height: 1000px;
+    position: absolute;
+    background: #2a2a3d;
 }
 
-.heart {
-    animation: heartbeat 1.2s infinite;
-    transform-origin: center;
-}    
-/* Pixel heart */
+/* Player */
 .heart {
     position: absolute;
     width: 6px;
     height: 6px;
     background: red;
-
-    
     box-shadow:
-    
-    6px 0 black, 12px 0 black, 18px 0 black, 24px 0 black,
-    0 6px black, 30px 6px black,
-    0 12px black, 30px 12px black,
-    6px 18px black, 24px 18px black,
-    12px 24px black, 18px 24px black,
+        6px 0 black, 12px 0 black, 18px 0 black, 24px 0 black,
+        0 6px black, 30px 6px black,
+        0 12px black, 30px 12px black,
+        6px 18px black, 24px 18px black,
+        12px 24px black, 18px 24px black,
 
-    12px 6px red, 18px 6px red,
-    6px 12px red, 12px 12px red, 18px 12px red, 24px 12px red,
-    6px 18px red, 12px 18px red, 18px 18px red, 24px 18px red;
-} 
-
-/* Objects */
-.object {
-    position: absolute;
-    width: 40px;
-    height: 40px;
-    background: #6cf;
-    border-radius: 8px;
+        12px 6px red, 18px 6px red,
+        6px 12px red, 12px 12px red, 18px 12px red, 24px 12px red,
+        6px 18px red, 12px 18px red, 18px 18px red, 24px 18px red;
 }
 
-/* Dialog box */
+/* Simple pixel furniture */
+.object {
+    position: absolute;
+    background: #888;
+    border: 2px solid #000;
+}
+
+/* Specific objects */
+.bed { width: 120px; height: 60px; background: #c66; }
+.table { width: 140px; height: 40px; background: #964; }
+.drawer { width: 60px; height: 60px; background: #bbb; }
+.carpet { width: 200px; height: 120px; background: #446; }
+.door { width: 40px; height: 80px; background: #663; }
+.gym { width: 140px; height: 40px; background: #999; }
+
+/* Dialog */
 .dialog {
     position: absolute;
     top: 0;
     width: 100%;
     background: rgba(0,0,0,0.85);
     color: white;
-    padding: 15px;
-    font-size: 14px;
+    padding: 10px;
     display: none;
-    box-sizing: border-box;
 }
 
+/* Controls */
 .controls {
     position: absolute;
     bottom: 20px;
@@ -89,26 +86,17 @@ body {
     grid-template-columns: repeat(3, 50px);
     grid-template-rows: repeat(2, 50px);
     gap: 8px;
+    z-index: 10;
 }
 
 .btn {
     background: #444;
     color: white;
     border: none;
-    border-radius: 12px;
-    font-size: 18px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    border-radius: 10px;
 }
 
-/* Arrow layout */
-.up { grid-column: 2; grid-row: 1; }
-.left { grid-column: 1; grid-row: 2; }
-.down { grid-column: 2; grid-row: 2; }
-.right { grid-column: 3; grid-row: 2; }
-
-/* Interact button */
+/* Interact */
 .interact {
     position: absolute;
     bottom: 25px;
@@ -123,7 +111,6 @@ body {
     justify-content: center;
 }
 
-/* Inner circle */
 .interact::after {
     content: "";
     width: 30px;
@@ -131,28 +118,39 @@ body {
     background: #ffcc00;
     border-radius: 50%;
 }
-.interact:active::after {
-    transform: scale(0.85);
-}
-
-.btn:active {
-    transform: scale(0.9);
-}
-    
 </style>
 </head>
 
 <body>
 
 <div class="game" id="game">
-    <div class="heart" id="heart"></div>
+    <div class="world" id="world">
 
-    <!-- Objects -->
-    <div class="object" style="top:100px; left:100px;" data-text="A dying tree. The air feels heavy."></div>
-    <div class="object" style="top:300px; left:200px;" data-text="Plastic waste... no one cleaned this for years."></div>
-    <div class="object" style="top:200px; left:50px;" data-text="The river used to be clear here."></div>
+        <!-- PLAYER -->
+        <div class="heart" id="heart"></div>
 
-    <!-- Dialog -->
+        <!-- ROOM LAYOUT -->
+
+        <!-- Bed (top-left) -->
+        <div class="object bed" style="top:50px; left:50px;" data-text="Your bed. You barely slept."></div>
+
+        <!-- Table below bed -->
+        <div class="object table" style="top:120px; left:50px;" data-text="A laptop. Still open... still running."></div>
+
+        <!-- Drawer at foot -->
+        <div class="object drawer" style="top:50px; left:180px;" data-text="Clothes. Some still unworn."></div>
+
+        <!-- Carpet center -->
+        <div class="object carpet" style="top:300px; left:250px;" data-text="The only clean thing in the room."></div>
+
+        <!-- Door right -->
+        <div class="object door" style="top:300px; left:740px;" data-text="You could leave... but not yet."></div>
+
+        <!-- Gym bottom -->
+        <div class="object gym" style="top:850px; left:300px;" data-text="You tried to stay disciplined."></div>
+
+    </div>
+
     <div class="dialog" id="dialog"></div>
 
     <!-- Controls -->
@@ -163,106 +161,106 @@ body {
         <button class="btn right">→</button>
     </div>
 
-    <button class="interact">E</button>
+    <button class="interact"></button>
 </div>
 
 <script>
 const heart = document.getElementById("heart");
+const world = document.getElementById("world");
 const game = document.getElementById("game");
 const dialog = document.getElementById("dialog");
 const objects = document.querySelectorAll(".object");
 
-let x = 150;
-let y = 300;
+let x = 200, y = 200;
 const speed = 2;
 
-let keys = { up:false, down:false, left:false, right:false };
+let keys = {up:false,down:false,left:false,right:false};
 
-/* Movement loop */
+/* GAME LOOP */
 function update() {
     if (keys.up) y -= speed;
     if (keys.down) y += speed;
     if (keys.left) x -= speed;
     if (keys.right) x += speed;
 
-    x = Math.max(0, Math.min(game.clientWidth - 60, x));
-    y = Math.max(0, Math.min(game.clientHeight - 60, y));
+    // WORLD BOUNDS
+    x = Math.max(0, Math.min(world.clientWidth - 30, x));
+    y = Math.max(0, Math.min(world.clientHeight - 30, y));
 
     heart.style.left = x + "px";
     heart.style.top = y + "px";
+
+    updateCamera();
 
     requestAnimationFrame(update);
 }
 update();
 
-/* Interaction check */
-let dialogTimeout;
+/* CAMERA SYSTEM */
+function updateCamera() {
+    let camX = x - game.clientWidth / 2;
+    let camY = y - game.clientHeight / 2;
+
+    // Clamp camera to world edges
+    camX = Math.max(0, Math.min(world.clientWidth - game.clientWidth, camX));
+    camY = Math.max(0, Math.min(world.clientHeight - game.clientHeight, camY));
+
+    world.style.transform = `translate(${-camX}px, ${-camY}px)`;
+}
+
+/* INTERACTION */
+let timeout;
 
 function interact() {
     for (let obj of objects) {
         const ox = obj.offsetLeft;
         const oy = obj.offsetTop;
 
-        const distance = Math.hypot(x - ox, y - oy);
+        const dist = Math.hypot(x - ox, y - oy);
 
-        if (distance < 60) {
+        if (dist < 80) {
             const text = obj.dataset.text;
-
-            // Show dialog
             dialog.innerText = text;
             dialog.style.display = "block";
 
-            // Clear previous timeout if exists
-            clearTimeout(dialogTimeout);
-
-            // Count words
-            const wordCount = text.trim().split(/\s+/).length;
-
-            // 1 word = 1 second
-            const duration = wordCount * 1000;
-
-            dialogTimeout = setTimeout(() => {
+            clearTimeout(timeout);
+            const words = text.split(" ").length;
+            timeout = setTimeout(() => {
                 dialog.style.display = "none";
-            }, duration);
+            }, words * 1000);
 
             return;
         }
     }
-
-    dialog.style.display = "none";
 }
 
-/* Keyboard */
+/* INPUT */
 document.addEventListener("keydown", e => {
-    if (e.key === "ArrowUp") keys.up = true;
-    if (e.key === "ArrowDown") keys.down = true;
-    if (e.key === "ArrowLeft") keys.left = true;
-    if (e.key === "ArrowRight") keys.right = true;
-    if (e.key.toLowerCase() === "e") interact();
+    if (e.key==="ArrowUp") keys.up=true;
+    if (e.key==="ArrowDown") keys.down=true;
+    if (e.key==="ArrowLeft") keys.left=true;
+    if (e.key==="ArrowRight") keys.right=true;
+    if (e.key==="e") interact();
 });
 
 document.addEventListener("keyup", e => {
-    if (e.key === "ArrowUp") keys.up = false;
-    if (e.key === "ArrowDown") keys.down = false;
-    if (e.key === "ArrowLeft") keys.left = false;
-    if (e.key === "ArrowRight") keys.right = false;
+    if (e.key==="ArrowUp") keys.up=false;
+    if (e.key==="ArrowDown") keys.down=false;
+    if (e.key==="ArrowLeft") keys.left=false;
+    if (e.key==="ArrowRight") keys.right=false;
 });
 
-/* Mobile controls */
-function bind(btn, key) {
-    btn.addEventListener("touchstart", e => { e.preventDefault(); keys[key]=true; });
-    btn.addEventListener("touchend", () => keys[key]=false);
-    btn.addEventListener("mousedown", () => keys[key]=true);
-    btn.addEventListener("mouseup", () => keys[key]=false);
+/* MOBILE */
+function bind(sel, key){
+    const b=document.querySelector(sel);
+    b.addEventListener("touchstart",e=>{e.preventDefault();keys[key]=true});
+    b.addEventListener("touchend",()=>keys[key]=false);
+    b.addEventListener("mousedown",()=>keys[key]=true);
+    b.addEventListener("mouseup",()=>keys[key]=false);
 }
+bind(".up","up"); bind(".down","down"); bind(".left","left"); bind(".right","right");
 
-bind(document.querySelector(".up"), "up");
-bind(document.querySelector(".down"), "down");
-bind(document.querySelector(".left"), "left");
-bind(document.querySelector(".right"), "right");
-
-/* Interact button */
-document.querySelector(".interact").addEventListener("click", interact);
+document.querySelector(".interact").onclick = interact;
 </script>
 
 </body>
