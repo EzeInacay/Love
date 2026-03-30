@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Heart Move Game</title>
+
+<style>
+    body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: #111;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+    }
+
+    /* Game container (portrait) */
+    .game {
+        width: 360px;
+        height: 640px;
+        background: #1e1e2f;
+        position: relative;
+        overflow: hidden;
+        border-radius: 20px;
+    }
+
+    /* Heart */
+    .heart {
+        position: absolute;
+        font-size: 40px;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        user-select: none;
+    }
+
+    /* Controls */
+    .controls {
+        position: absolute;
+        bottom: 20px;
+        left: 20px;
+        display: grid;
+        grid-template-columns: 50px 50px 50px;
+        grid-template-rows: 50px 50px;
+        gap: 5px;
+    }
+
+    .btn {
+        background: #444;
+        color: white;
+        border: none;
+        border-radius: 10px;
+        font-size: 20px;
+        cursor: pointer;
+    }
+
+    .btn:active {
+        background: #777;
+    }
+
+    /* Positioning arrows */
+    .up { grid-column: 2; grid-row: 1; }
+    .left { grid-column: 1; grid-row: 2; }
+    .down { grid-column: 2; grid-row: 2; }
+    .right { grid-column: 3; grid-row: 2; }
+</style>
+</head>
+
+<body>
+
+<div class="game" id="game">
+    <div class="heart" id="heart">❤️</div>
+
+    <div class="controls">
+        <button class="btn up">↑</button>
+        <button class="btn left">←</button>
+        <button class="btn down">↓</button>
+        <button class="btn right">→</button>
+    </div>
+</div>
+
+<script>
+    const heart = document.getElementById("heart");
+    const game = document.getElementById("game");
+
+    let x = game.clientWidth / 2;
+    let y = game.clientHeight / 2;
+    const speed = 10;
+
+    function move(dx, dy) {
+        x += dx;
+        y += dy;
+
+        // boundaries
+        const maxX = game.clientWidth - 30;
+        const maxY = game.clientHeight - 30;
+
+        x = Math.max(0, Math.min(maxX, x));
+        y = Math.max(0, Math.min(maxY, y));
+
+        heart.style.left = x + "px";
+        heart.style.top = y + "px";
+        heart.style.transform = "translate(-50%, -50%)";
+    }
+
+    // Keyboard controls
+    document.addEventListener("keydown", (e) => {
+        switch (e.key) {
+            case "ArrowUp": move(0, -speed); break;
+            case "ArrowDown": move(0, speed); break;
+            case "ArrowLeft": move(-speed, 0); break;
+            case "ArrowRight": move(speed, 0); break;
+        }
+    });
+
+    // Button controls (mobile)
+    document.querySelector(".up").addEventListener("click", () => move(0, -speed));
+    document.querySelector(".down").addEventListener("click", () => move(0, speed));
+    document.querySelector(".left").addEventListener("click", () => move(-speed, 0));
+    document.querySelector(".right").addEventListener("click", () => move(speed, 0));
+</script>
+
+</body>
+</html>
