@@ -3,75 +3,77 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Heart Move Game</title>
+<title>Pixel Heart Game</title>
 
 <style>
-    body {
-        margin: 0;
-        font-family: Arial, sans-serif;
-        background: #111;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100vh;
-    }
+body {
+    margin: 0;
+    background: #111;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
 
-    /* Game container (portrait) */
-    .game {
-        width: 360px;
-        height: 640px;
-        background: #1e1e2f;
-        position: relative;
-        overflow: hidden;
-        border-radius: 20px;
-    }
+/* Portrait container */
+.game {
+    width: 360px;
+    height: 640px;
+    background: #1e1e2f;
+    position: relative;
+    overflow: hidden;
+    border-radius: 20px;
+}
 
-    /* Heart */
-    .heart {
-        position: absolute;
-        font-size: 40px;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        user-select: none;
-    }
+/* Pixel Heart */
+.heart {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    background: red;
+    transform: scale(2);
+    box-shadow:
+        20px 0 red, 40px 0 red,
+        0 20px red, 20px 20px red, 40px 20px red, 60px 20px red,
+        0 40px red, 20px 40px red, 40px 40px red, 60px 40px red,
+        20px 60px red, 40px 60px red;
+}
 
-    /* Controls */
-    .controls {
-        position: absolute;
-        bottom: 20px;
-        left: 20px;
-        display: grid;
-        grid-template-columns: 50px 50px 50px;
-        grid-template-rows: 50px 50px;
-        gap: 5px;
-    }
+/* Controls */
+.controls {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    display: grid;
+    grid-template-columns: repeat(3, 55px);
+    grid-template-rows: repeat(2, 55px);
+    gap: 6px;
+}
 
-    .btn {
-        background: #444;
-        color: white;
-        border: none;
-        border-radius: 10px;
-        font-size: 20px;
-        cursor: pointer;
-    }
+.btn {
+    background: #444;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 20px;
+    user-select: none;
+}
 
-    .btn:active {
-        background: #777;
-    }
+.btn:active {
+    background: #777;
+}
 
-    /* Positioning arrows */
-    .up { grid-column: 2; grid-row: 1; }
-    .left { grid-column: 1; grid-row: 2; }
-    .down { grid-column: 2; grid-row: 2; }
-    .right { grid-column: 3; grid-row: 2; }
+.up { grid-column: 2; grid-row: 1; }
+.left { grid-column: 1; grid-row: 2; }
+.down { grid-column: 2; grid-row: 2; }
+.right { grid-column: 3; grid-row: 2; }
 </style>
 </head>
 
 <body>
 
 <div class="game" id="game">
-    <div class="heart" id="heart">❤️</div>
+    <div class="heart" id="heart"></div>
 
     <div class="controls">
         <button class="btn up">↑</button>
@@ -82,44 +84,89 @@
 </div>
 
 <script>
-    const heart = document.getElementById("heart");
-    const game = document.getElementById("game");
+const heart = document.getElementById("heart");
+const game = document.getElementById("game");
 
-    let x = game.clientWidth / 2;
-    let y = game.clientHeight / 2;
-    const speed = 10;
+let x = game.clientWidth / 2;
+let y = game.clientHeight / 2;
 
-    function move(dx, dy) {
-        x += dx;
-        y += dy;
+const speed = 3;
 
-        // boundaries
-        const maxX = game.clientWidth - 30;
-        const maxY = game.clientHeight - 30;
+/* Movement state */
+let keys = {
+    up: false,
+    down: false,
+    left: false,
+    right: false
+};
 
-        x = Math.max(0, Math.min(maxX, x));
-        y = Math.max(0, Math.min(maxY, y));
+/* Smooth animation loop */
+function update() {
+    if (keys.up) y -= speed;
+    if (keys.down) y += speed;
+    if (keys.left) x -= speed;
+    if (keys.right) x += speed;
 
-        heart.style.left = x + "px";
-        heart.style.top = y + "px";
-        heart.style.transform = "translate(-50%, -50%)";
-    }
+    // boundaries
+    const maxX = game.clientWidth - 60;
+    const maxY = game.clientHeight - 60;
 
-    // Keyboard controls
-    document.addEventListener("keydown", (e) => {
-        switch (e.key) {
-            case "ArrowUp": move(0, -speed); break;
-            case "ArrowDown": move(0, speed); break;
-            case "ArrowLeft": move(-speed, 0); break;
-            case "ArrowRight": move(speed, 0); break;
-        }
+    x = Math.max(0, Math.min(maxX, x));
+    y = Math.max(0, Math.min(maxY, y));
+
+    heart.style.left = x + "px";
+    heart.style.top = y + "px";
+
+    requestAnimationFrame(update);
+}
+
+update();
+
+/* Keyboard controls */
+document.addEventListener("keydown", e => {
+    if (e.key === "ArrowUp") keys.up = true;
+    if (e.key === "ArrowDown") keys.down = true;
+    if (e.key === "ArrowLeft") keys.left = true;
+    if (e.key === "ArrowRight") keys.right = true;
+});
+
+document.addEventListener("keyup", e => {
+    if (e.key === "ArrowUp") keys.up = false;
+    if (e.key === "ArrowDown") keys.down = false;
+    if (e.key === "ArrowLeft") keys.left = false;
+    if (e.key === "ArrowRight") keys.right = false;
+});
+
+/* Mobile hold controls */
+function bindButton(selector, key) {
+    const btn = document.querySelector(selector);
+
+    btn.addEventListener("touchstart", e => {
+        e.preventDefault();
+        keys[key] = true;
     });
 
-    // Button controls (mobile)
-    document.querySelector(".up").addEventListener("click", () => move(0, -speed));
-    document.querySelector(".down").addEventListener("click", () => move(0, speed));
-    document.querySelector(".left").addEventListener("click", () => move(-speed, 0));
-    document.querySelector(".right").addEventListener("click", () => move(speed, 0));
+    btn.addEventListener("touchend", () => {
+        keys[key] = false;
+    });
+
+    btn.addEventListener("mousedown", () => {
+        keys[key] = true;
+    });
+
+    btn.addEventListener("mouseup", () => {
+        keys[key] = false;
+    });
+
+    btn.addEventListener("mouseleave", () => {
+        keys[key] = false;
+    });
+}
+
+bindButton(".up", "up");
+bindButton(".down", "down");
+bindButton(".left", "left");
+bindButton(".right", "right");
 </script>
 
 </body>
