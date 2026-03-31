@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Laptop</title>
+
+<style>
+body {
+    margin: 0;
+    background: black;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* SCREEN = FULL WIDTH LANDSCAPE */
+.laptop {
+    width: 100vw;
+    height: 56.25vw; /* 16:9 ratio */
+    max-height: 100vh;
+    background: #1e1e2f;
+    position: relative;
+    overflow: hidden;
+}
+
+/* DESKTOP */
+.desktop {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(#2c3e50, #4ca1af);
+    position: relative;
+}
+
+/* CURSOR */
+.cursor {
+    width: 10px;
+    height: 10px;
+    background: white;
+    position: absolute;
+    border: 2px solid black;
+}
+
+/* TASKBAR */
+.taskbar {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 40px;
+    background: rgba(0,0,0,0.7);
+    display: flex;
+    align-items: center;
+}
+
+/* START BUTTON */
+.start {
+    width: 80px;
+    height: 100%;
+    background: #333;
+    color: white;
+    border: none;
+}
+
+/* APPS */
+.app {
+    position: absolute;
+    width: 80px;
+    text-align: center;
+    color: white;
+    cursor: pointer;
+}
+
+/* SAMPLE APPS */
+.app1 { top: 50px; left: 50px; }
+.app2 { top: 150px; left: 50px; }
+
+/* CONTROLS */
+.controls {
+    position: absolute;
+    bottom: 60px;
+    left: 20px;
+    display: grid;
+    grid-template-columns: 50px 50px 50px;
+    grid-template-rows: 50px 50px;
+    gap: 6px;
+}
+
+.btn {
+    background: #333;
+    color: white;
+    border: none;
+    border-radius: 10px;
+}
+
+.up { grid-column: 2; }
+.left { grid-column: 1; grid-row: 2; }
+.down { grid-column: 2; grid-row: 2; }
+.right { grid-column: 3; grid-row: 2; }
+
+/* INTERACT */
+.interact {
+    position: absolute;
+    bottom: 60px;
+    right: 20px;
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    background: #222;
+}
+
+.start-menu {
+    position: absolute;
+    bottom: 40px;
+    left: 0;
+    width: 200px;
+    background: rgba(0,0,0,0.9);
+    display: none;
+    flex-direction: column;
+}
+
+.start-menu button {
+    padding: 10px;
+    border: none;
+    background: none;
+    color: white;
+    text-align: left;
+}   
+</style>
+</head>
+
+<body>
+
+<div class="laptop">
+    <div class="desktop" id="desktop">
+
+        <!-- CURSOR -->
+        <div class="cursor" id="cursor"></div>
+
+        <!-- APPS -->
+        <div class="app app1" data-text="Browser">🌐<br>Browser</div>
+        <div class="app app2" data-text="Files">📁<br>Files</div>
+
+        <!-- TASKBAR -->
+        <div class="taskbar">
+            <button class="start" onclick="toggleStart()">Start</button>
+        </div>
+        <div class="start-menu" id="startMenu">
+            <button onclick="shutdown()">⏻ Shutdown</button>
+        </div>
+
+    </div>
+
+    <!-- CONTROLS -->
+    <div class="controls">
+        <button class="btn up">↑</button>
+        <button class="btn left">←</button>
+        <button class="btn down">↓</button>
+        <button class="btn right">→</button>
+    </div>
+
+    <button class="interact"></button>
+
+</div>
+
+<script>
+const cursor = document.getElementById("cursor");
+const desktop = document.getElementById("desktop");
+const apps = document.querySelectorAll(".app");
+
+let x = 100, y = 100;
+const speed = 3;
+
+let keys = {up:false,down:false,left:false,right:false};
+
+/* LOOP */
+function update() {
+    if (keys.up) y -= speed;
+    if (keys.down) y += speed;
+    if (keys.left) x -= speed;
+    if (keys.right) x += speed;
+
+    x = Math.max(0, Math.min(desktop.clientWidth - 10, x));
+    y = Math.max(0, Math.min(desktop.clientHeight - 10, y));
+
+    cursor.style.left = x + "px";
+    cursor.style.top = y + "px";
+
+    requestAnimationFrame(update);
+}
+update();
+
+/* INTERACT */
+function interact() {
+    for (let app of apps) {
+        const ax = app.offsetLeft;
+        const ay = app.offsetTop;
+
+        const d = Math.hypot(x - ax, y - ay);
+
+        if (d < 60) {
+            alert(app.dataset.text + " opened!");
+        }
+    }
+}
+
+/* INPUT */
+document.addEventListener("keydown", e=>{
+    if(e.key==="ArrowUp") keys.up=true;
+    if(e.key==="ArrowDown") keys.down=true;
+    if(e.key==="ArrowLeft") keys.left=true;
+    if(e.key==="ArrowRight") keys.right=true;
+    if(e.key==="e") interact();
+});
+document.addEventListener("keyup", e=>{
+    if(e.key==="ArrowUp") keys.up=false;
+    if(e.key==="ArrowDown") keys.down=false;
+    if(e.key==="ArrowLeft") keys.left=false;
+    if(e.key==="ArrowRight") keys.right=false;
+});
+
+/* MOBILE */
+function bind(sel,key){
+    const b=document.querySelector(sel);
+    b.addEventListener("touchstart",e=>{e.preventDefault();keys[key]=true});
+    b.addEventListener("touchend",()=>keys[key]=false);
+    b.addEventListener("mousedown",()=>keys[key]=true);
+    b.addEventListener("mouseup",()=>keys[key]=false);
+}
+bind(".up","up"); bind(".down","down"); bind(".left","left"); bind(".right","right");
+
+document.querySelector(".interact").onclick = interact;
+function toggleStart() {
+    const menu = document.getElementById("startMenu");
+    menu.style.display = (menu.style.display === "flex") ? "none" : "flex";
+}
+
+function shutdown() {
+    // Optional: small delay for realism
+    document.body.style.background = "black";
+
+    setTimeout(() => {
+        window.location.href = "index.html";
+    }, 500);
+}
+</script>
+
+</body>
+</html>

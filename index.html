@@ -315,7 +315,21 @@ function interact() {
 
             return;
         }
-    }
+    } if (obj.classList.contains("table")) {
+    dialog.innerHTML = `
+        ${text} <br>
+        <button id="open-laptop">Open Laptop</button>
+        <button id="close-laptop">Leave</button>
+    `;
+
+    document.getElementById("open-laptop").onclick = () => {
+        window.location.href = "laptop.html";
+    };
+
+    document.getElementById("close-laptop").onclick = () => {
+        dialog.style.display = "none";
+    };
+}
 }
 
 /* INPUT */
