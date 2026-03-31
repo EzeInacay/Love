@@ -291,21 +291,39 @@ function interact() {
         const ox = obj.offsetLeft + (parseInt(obj.dataset.offsetX) || 0);
         const oy = obj.offsetTop + (parseInt(obj.dataset.offsetY) || 0);
 
-        // Define an interaction radius (larger than collision)
         const interactRadius = (parseInt(obj.dataset.radius) || 50);
-
         const d = Math.hypot(x - ox, y - oy);
 
         if (d < interactRadius) {
             const text = obj.dataset.text;
 
-            // Special case for door
-            if (obj.classList.contains("door")) {
+            // ✅ TABLE (put first)
+            if (obj.classList.contains("table")) {
+                dialog.innerHTML = `
+                    ${text} <br>
+                    <button id="open-laptop">Open Laptop</button>
+                    <button id="close-laptop">Leave</button>
+                `;
+
+                document.getElementById("open-laptop").onclick = () => {
+                    window.location.href = "laptop.html";
+                };
+
+                document.getElementById("close-laptop").onclick = () => {
+                    dialog.style.display = "none";
+                };
+            }
+
+            // ✅ DOOR
+            else if (obj.classList.contains("door")) {
                 dialog.innerHTML = `${text} <br><button id="go-out">Go Outside</button>`;
                 document.getElementById("go-out").onclick = () => {
                     window.location.href = "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
                 };
-            } else {
+            }
+
+            // ✅ DEFAULT
+            else {
                 dialog.innerText = text;
             }
 
@@ -315,23 +333,8 @@ function interact() {
 
             return;
         }
-    } if (obj.classList.contains("table")) {
-    dialog.innerHTML = `
-        ${text} <br>
-        <button id="open-laptop">Open Laptop</button>
-        <button id="close-laptop">Leave</button>
-    `;
-
-    document.getElementById("open-laptop").onclick = () => {
-        window.location.href = "laptop.html";
-    };
-
-    document.getElementById("close-laptop").onclick = () => {
-        dialog.style.display = "none";
-    };
+    }
 }
-}
-
 /* INPUT */
 document.addEventListener("keydown", e=>{
     if(e.key==="ArrowUp") keys.up=true;
