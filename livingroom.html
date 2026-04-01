@@ -34,32 +34,83 @@ body { margin:0; background:black; display:flex; justify-content:center; align-i
     color:white;
     display:none;
 }
+
+.world {
+    width: 600px;
+    height: 700px;
+    position: absolute;
+    background: #3a3a4d;
+}
+
+.tv {
+    background: #222;
+    box-shadow: inset 0 0 0 3px black;
+}
+
+.sofa {
+    background: #884;
+    box-shadow: inset 0 0 0 2px black;
+}
 </style>
 </head>
 
 <body>
 
-<div class="game">
+<div class="game" id="game">
 
-    <div class="heart" id="heart"></div>
+    <div class="world" id="world">
 
-    <!-- BASEMENT DOOR -->
-    <div class="object basement" style="top:200px; left:20px;" data-text="Basement"></div>
+        <div class="heart" id="heart"></div>
 
-    <!-- RESTROOM DOOR -->
-    <div class="object restroom" style="top:300px; left:20px;" data-text="Restroom"></div>
+        <!-- TV (top wall) -->
+        <div class="object tv" style="top:20px; left:180px; width:120px; height:50px;"
+             data-text="A TV. Nothing interesting is on."
+             data-collidable="false"
+             data-radius="90"></div>
 
-    <!-- EXIT BACK TO HALL -->
-    <div class="object exit" style="top:500px; left:150px;" data-text="Back to Hall"></div>
+        <!-- Sofa -->
+        <div class="object sofa" style="top:250px; left:140px; width:160px; height:70px;"
+             data-text="A comfy sofa."
+             data-radius="80"></div>
+
+        <!-- Basement Door -->
+        <div class="object door basement" style="top:200px; left:20px;"
+             data-text="Basement door"
+             data-collidable="false"
+             data-radius="100"></div>
+
+        <!-- Restroom Door -->
+        <div class="object door restroom" style="top:300px; left:20px;"
+             data-text="Restroom door"
+             data-collidable="false"
+             data-radius="100"></div>
+
+        <!-- Outside Door -->
+        <div class="object door outside" style="top:450px; left:20px;"
+             data-text="Door to outside"
+             data-collidable="false"
+             data-radius="100"></div>
+
+        <!-- Back to Hall -->
+        <div class="object door hall" style="top:580px; left:250px;"
+             data-text="Back to hallway"
+             data-collidable="false"
+             data-radius="100"></div>
+
+    </div>
 
     <div class="dialog" id="dialog"></div>
-    <div class="controls">
-    <button class="btn up">↑</button>
-    <button class="btn left">←</button>
-    <button class="btn down">↓</button>
-    <button class="btn right">→</button>
-</div>
 
+    <div class="controls">
+        <button class="btn up">↑</button>
+        <button class="btn left">←</button>
+        <button class="btn down">↓</button>
+        <button class="btn right">→</button>
+    </div>
+
+    <button class="interact"></button>
+
+</div>
 <button class="interact"></button>
 </div>
 
@@ -154,15 +205,43 @@ function interact() {
 
         if (d < (parseInt(obj.dataset.radius) || 60)) {
 
-            if (obj.dataset.goto) {
-                window.location.href = obj.dataset.goto;
-                return;
+            const text = obj.dataset.text;
+
+            // 🚪 DOORS
+            if (obj.classList.contains("door")) {
+                dialog.innerHTML = `
+                    ${text} <br>
+                    <button id="go">Go Through</button>
+                    <button id="stay">Stay</button>
+                `;
+
+                document.getElementById("go").onclick = () => {
+
+                    if (obj.classList.contains("hall")) {
+                        window.location.href = "hallway.html";
+                    }
+                    else if (obj.classList.contains("outside")) {
+                        window.location.href = "outside.html"; // placeholder
+                    }
+                    else if (obj.classList.contains("basement")) {
+                        window.location.href = "basement.html"; // placeholder
+                    }
+                    else if (obj.classList.contains("restroom")) {
+                        window.location.href = "restroom.html"; // placeholder
+                    }
+                };
+
+                document.getElementById("stay").onclick = () => {
+                    dialog.style.display = "none";
+                };
             }
 
-            dialog.innerText = obj.dataset.text || "Nothing here.";
-            dialog.style.display = "block";
+            // 🪑 OTHER OBJECTS
+            else {
+                dialog.innerText = text;
+            }
 
-            setTimeout(() => dialog.style.display = "none", 1000);
+            dialog.style.display = "block";
             return;
         }
     }
@@ -194,7 +273,10 @@ function bind(sel,key){
 bind(".up","up"); bind(".down","down"); bind(".left","left"); bind(".right","right");
 
 document.querySelector(".interact").onclick = interact;
-
+initGame({
+    spawn: { x: 250, y: 500 },
+    worldSize: { width: 600, height: 700 }
+});
 </script>
 
 </body>
