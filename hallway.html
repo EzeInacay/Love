@@ -14,9 +14,10 @@ body { margin:0; background:black; display:flex; justify-content:center; align-i
 }
 
 .world {
-    width:1200px; height:400px;
-    position:absolute;
-    background:#2f2f2f;
+    width: 600px;
+    height: 700px;
+    position: absolute;
+    background: #2a2a3d;
 }
 
 .heart {
@@ -51,6 +52,40 @@ body { margin:0; background:black; display:flex; justify-content:center; align-i
     height:200px;
     pointer-events:none;
     background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, rgba(0,0,0,0.9) 70%);
+}
+
+.btn {
+    background: #333;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 18px;
+}
+.up { grid-column: 2; grid-row: 1; }
+.left { grid-column: 1; grid-row: 2; }
+.down { grid-column: 2; grid-row: 2; }
+.right { grid-column: 3; grid-row: 2; }
+/* INTERACT BUTTON */
+.interact {
+    position: absolute;
+    bottom: 25px;
+    right: 25px;
+    width: 70px;
+    height: 70px;
+    background: #222;
+    border-radius: 50%;
+    border: 3px solid #555;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.interact::after {
+    content: "";
+    width: 30px;
+    height: 30px;
+    background: #ffcc00;
+    border-radius: 50%;
 }
 </style>
 </head>
@@ -276,8 +311,7 @@ bind(".up","up"); bind(".down","down"); bind(".left","left"); bind(".right","rig
 
 document.querySelector(".interact").onclick = interact;
 initGame({
-    spawn: { x: 750, y: 200 },
-    worldSize: { width: 1200, height: 400 }
+    spawn: { x: 750, y: 200 }
 });
 </script>
 
