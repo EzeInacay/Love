@@ -30,14 +30,22 @@ body { margin:0; background:black; display:flex; justify-content:center; align-i
     background:rgba(0,0,0,0.8); color:white;
     display:none; padding:10px;
 }
+.light {
+    position:absolute;
+    width:200px;
+    height:200px;
+    pointer-events:none;
+    background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, rgba(0,0,0,0.9) 70%);
+}
 </style>
 </head>
 
 <body>
 
-<div class="game">
+<div class="game" id="game">
     <div class="world" id="world">
 
+        <div class="light" id="light"></div>
         <div class="heart" id="heart"></div>
 
         <!-- WALLS (top & bottom) -->
@@ -47,14 +55,26 @@ body { margin:0; background:black; display:flex; justify-content:center; align-i
         <!-- DEAD END WALL (left) -->
         <div class="wall" style="top:0; left:0; width:40px; height:400px;"></div>
 
-        <!-- YOUR DOOR -->
-        <div class="object door" style="top:150px; left:800px;" data-text="Your room"></div>
+        <!-- YOUR ROOM -->
+        <div class="object door room"
+         style="top:150px; left:800px;"
+         data-text="Your room"
+         data-radius="100"
+         data-collidable="false"></div>
 
-        <!-- NEIGHBOR DOOR -->
-        <div class="object door2" style="top:150px; left:900px;" data-text="Neighbor's room"></div>
+        <!-- NEIGHBOR -->
+        <div class="object door neighbor"
+         style="top:150px; left:900px;"
+         data-text="Neighbor's room"
+         data-radius="100"
+         data-collidable="false"></div>
 
-        <!-- LIVING ROOM ENTRANCE -->
-        <div class="object living" style="top:150px; left:1100px;" data-text="Living Room"></div>
+        <!-- LIVING ROOM -->
+        <div class="object door living"
+        style="top:150px; left:1100px;"
+         data-text="Living Room"
+         data-radius="120"
+         data-collidable="false"></div>
 
     </div>
 
@@ -160,15 +180,40 @@ function interact() {
 
         if (d < (parseInt(obj.dataset.radius) || 60)) {
 
-            if (obj.dataset.goto) {
-                window.location.href = obj.dataset.goto;
-                return;
+            const text = obj.dataset.text;
+
+            // 🚪 DOORS
+            if (obj.classList.contains("door")) {
+                dialog.innerHTML = `
+                    ${text} <br>
+                    <button id="go">Go Through</button>
+                    <button id="stay">Stay</button>
+                `;
+
+                document.getElementById("go").onclick = () => {
+
+                    if (obj.classList.contains("room")) {
+                        window.location.href = "index.html";
+                    }
+                    else if (obj.classList.contains("living")) {
+                        window.location.href = "livingroom.html";
+                    }
+                    else if (obj.classList.contains("neighbor")) {
+                        alert("It's locked."); // placeholder
+                    }
+                };
+
+                document.getElementById("stay").onclick = () => {
+                    dialog.style.display = "none";
+                };
             }
 
-            dialog.innerText = obj.dataset.text || "Nothing here.";
-            dialog.style.display = "block";
+            // DEFAULT
+            else {
+                dialog.innerText = text;
+            }
 
-            setTimeout(() => dialog.style.display = "none", 1000);
+            dialog.style.display = "block";
             return;
         }
     }
@@ -200,6 +245,10 @@ function bind(sel,key){
 bind(".up","up"); bind(".down","down"); bind(".left","left"); bind(".right","right");
 
 document.querySelector(".interact").onclick = interact;
+initGame({
+    spawn: { x: 750, y: 200 },
+    worldSize: { width: 1200, height: 400 }
+});
 </script>
 
 </body>
