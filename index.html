@@ -318,12 +318,12 @@ function interact() {
             else if (obj.classList.contains("door")) {
     dialog.innerHTML = `
         ${text} <br>
-        <button id="go-room">Go to Living Room</button>
+        <button id="go-hall">Go Outside</button>
         <button id="stay">Stay</button>
     `;
 
-    document.getElementById("go-room").onclick = () => {
-        window.location.href = "livingroom.html";
+    document.getElementById("go-hall").onclick = () => {
+        window.location.href = "hallway.html";
     };
 
     document.getElementById("stay").onclick = () => {
