@@ -19,7 +19,22 @@ body { margin:0; background:black; display:flex; justify-content:center; align-i
     background:#2f2f2f;
 }
 
-.heart { position:absolute; width:20px; height:20px; background:red; }
+.heart {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    background: red;
+    box-shadow:
+        6px 0 black, 12px 0 black, 18px 0 black, 24px 0 black,
+        0 6px black, 30px 6px black,
+        0 12px black, 30px 12px black,
+        6px 18px black, 24px 18px black,
+        12px 24px black, 18px 24px black,
+
+        12px 6px red, 18px 6px red,
+        6px 12px red, 12px 12px red, 18px 12px red, 24px 12px red,
+        6px 18px red, 12px 18px red, 18px 18px red, 24px 18px red;
+}
 
 .object { position:absolute; background:#663; width:40px; height:70px; }
 
@@ -79,11 +94,26 @@ body { margin:0; background:black; display:flex; justify-content:center; align-i
     </div>
 
     <div class="dialog" id="dialog"></div>
+    <button id="phone-btn" style="
+    position:absolute;
+    top:10px;
+    right:10px;
+    width:50px;
+    height:50px;
+    border-radius:10px;
+    background:#222;
+    color:white;
+    border:none;
+    font-size:18px;
+    z-index:20;"  >📱</button>
     <div class="controls">
-    <button class="btn up">↑</button>
-    <button class="btn left">←</button>
-    <button class="btn down">↓</button>
-    <button class="btn right">→</button>
+        <button class="btn up"></button>
+        <button class="btn left"></button>
+        <button class="btn down"></button>
+        <button class="btn right"></button>
+    </div>
+
+    <button class="interact"></button>
 </div>
 
 <button class="interact"></button>
