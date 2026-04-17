@@ -2,247 +2,430 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Laptop</title>
-
 <style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
 body {
-    margin: 0;
-    background: black;
+    background: #000;
     display: flex;
     justify-content: center;
     align-items: center;
-}
-
-/* SCREEN = FULL WIDTH LANDSCAPE */
-.laptop {
-    width: 100vw;
-    height: 56.25vw; /* 16:9 ratio */
-    max-height: 100vh;
-    background: #1e1e2f;
-    position: relative;
+    height: 100vh;
     overflow: hidden;
 }
 
-/* DESKTOP */
-.desktop {
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(#2c3e50, #4ca1af);
+/* SCREEN — always fills width, 16:9 */
+.laptop {
+    width: 100vw;
+    height: 56.25vw;
+    max-height: 100vh;
+    max-width: calc(100vh / 0.5625);
     position: relative;
+    overflow: hidden;
+    background: #0a0a1a;
+}
+
+/* DESKTOP WALLPAPER */
+.desktop {
+    position: absolute;
+    inset: 0 0 40px 0; /* leave space for taskbar */
+    background: linear-gradient(135deg, #1a2a4a 0%, #0d3060 30%, #1a4a8a 60%, #0a2a5a 100%);
+    overflow: hidden;
+}
+/* Pixel grid overlay */
+.desktop::before {
+    content:'';
+    position:absolute; inset:0;
+    background:
+        repeating-linear-gradient(90deg, rgba(255,255,255,0.02) 0px, rgba(255,255,255,0.02) 1px, transparent 1px, transparent 48px),
+        repeating-linear-gradient(0deg, rgba(255,255,255,0.02) 0px, rgba(255,255,255,0.02) 1px, transparent 1px, transparent 48px);
+    pointer-events:none;
 }
 
 /* CURSOR */
 .cursor {
-    width: 10px;
-    height: 10px;
-    background: white;
     position: absolute;
-    border: 2px solid black;
+    width: 0; height: 0;
+    z-index: 80;
+    pointer-events: none;
 }
+.cursor::before {
+    content: '';
+    position: absolute;
+    width: 0; height: 0;
+    border-style: solid;
+    border-width: 0 5px 14px 5px;
+    border-color: transparent transparent #fff transparent;
+    transform: rotate(-35deg);
+    filter: drop-shadow(1px 1px 1px rgba(0,0,0,0.8));
+}
+.cursor::after {
+    content: '';
+    position: absolute;
+    width: 4px; height: 10px;
+    background: #fff;
+    top: 10px; left: -1px;
+    transform: rotate(-35deg);
+}
+
+/* DESKTOP ICONS */
+.icon {
+    position: absolute;
+    width: 64px;
+    text-align: center;
+    color: #fff;
+    font-size: 10px;
+    font-family: monospace;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    user-select: none;
+}
+.icon:hover, .icon.hovered {
+    background: rgba(255,255,255,0.15);
+}
+.icon .ico { font-size: 28px; display: block; margin-bottom: 2px; }
 
 /* TASKBAR */
 .taskbar {
     position: absolute;
-    bottom: 0;
-    width: 100%;
+    bottom: 0; left: 0; right: 0;
     height: 40px;
-    background: rgba(0,0,0,0.7);
+    background: rgba(10,10,30,0.92);
+    backdrop-filter: blur(4px);
+    border-top: 1px solid rgba(255,255,255,0.1);
     display: flex;
     align-items: center;
 }
 
-/* START BUTTON */
-.start {
-    width: 80px;
-    height: 100%;
-    background: #333;
-    color: white;
+.start-btn {
+    height: 40px;
+    padding: 0 14px;
+    background: rgba(0,80,180,0.8);
+    color: #fff;
     border: none;
-}
-
-/* APPS */
-.app {
-    position: absolute;
-    width: 80px;
-    text-align: center;
-    color: white;
+    font-family: monospace;
+    font-size: 12px;
     cursor: pointer;
+    display: flex; align-items: center; gap: 5px;
+    border-right: 1px solid rgba(255,255,255,0.1);
+}
+.start-btn:hover { background: rgba(0,100,200,0.9); }
+
+.taskbar-time {
+    margin-left: auto;
+    color: #ccc;
+    font-family: monospace;
+    font-size: 11px;
+    padding-right: 10px;
 }
 
-/* SAMPLE APPS */
-.app1 { top: 50px; left: 50px; }
-.app2 { top: 150px; left: 50px; }
-
-/* CONTROLS */
-.controls {
-    position: absolute;
-    bottom: 60px;
-    left: 20px;
-    display: grid;
-    grid-template-columns: 50px 50px 50px;
-    grid-template-rows: 50px 50px;
-    gap: 6px;
-}
-
-.btn {
-    background: #333;
-    color: white;
-    border: none;
-    border-radius: 10px;
-}
-
-.up { grid-column: 2; }
-.left { grid-column: 1; grid-row: 2; }
-.down { grid-column: 2; grid-row: 2; }
-.right { grid-column: 3; grid-row: 2; }
-
-/* INTERACT */
-.interact {
-    position: absolute;
-    bottom: 60px;
-    right: 20px;
-    width: 70px;
-    height: 70px;
-    border-radius: 50%;
-    background: #222;
-}
-
+/* START MENU */
 .start-menu {
     position: absolute;
-    bottom: 40px;
-    left: 0;
-    width: 200px;
-    background: rgba(0,0,0,0.9);
+    bottom: 40px; left: 0;
+    width: 180px;
+    background: rgba(10,10,30,0.97);
+    border: 1px solid rgba(255,255,255,0.15);
     display: none;
     flex-direction: column;
+    z-index: 90;
+}
+.start-menu.open { display: flex; }
+.start-menu button {
+    padding: 10px 14px;
+    border: none;
+    background: transparent;
+    color: #ddd;
+    text-align: left;
+    font-family: monospace;
+    font-size: 12px;
+    cursor: pointer;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.start-menu button:hover { background: rgba(0,80,180,0.5); color: #fff; }
+
+/* APP WINDOW */
+.app-window {
+    position: absolute;
+    inset: 20px;
+    background: rgba(10,10,30,0.95);
+    border: 1px solid rgba(255,255,255,0.2);
+    display: none;
+    flex-direction: column;
+    z-index: 70;
+    border-radius: 4px;
+    overflow: hidden;
+}
+.app-window.open { display: flex; }
+.app-titlebar {
+    height: 28px;
+    background: rgba(0,60,140,0.8);
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    justify-content: space-between;
+}
+.app-title { color: #ddd; font-family: monospace; font-size: 11px; }
+.app-close {
+    width: 16px; height: 16px;
+    background: #c00;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    font-size: 10px;
+    color: #fff;
+    display: flex; align-items: center; justify-content: center;
+}
+.app-content {
+    flex: 1;
+    padding: 16px;
+    color: #aaa;
+    font-family: monospace;
+    font-size: 12px;
+    overflow: auto;
 }
 
-.start-menu button {
-    padding: 10px;
-    border: none;
-    background: none;
-    color: white;
-    text-align: left;
-}   
+/* CONTROLS OVERLAY */
+.controls-wrap {
+    position: absolute;
+    bottom: 50px; left: 0; right: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    padding: 0 16px 10px;
+    pointer-events: none;
+    z-index: 100;
+}
+.controls {
+    display: grid;
+    grid-template-columns: 44px 44px 44px;
+    grid-template-rows: 44px 44px;
+    gap: 5px;
+    pointer-events: all;
+}
+.btn {
+    background: rgba(30,30,60,0.85);
+    color: #ccc;
+    border: 1px solid #444;
+    border-radius: 8px;
+    font-size: 16px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    user-select: none;
+    touch-action: none;
+}
+.btn:active { background: rgba(0,80,180,0.7); }
+.up    { grid-column: 2; grid-row: 1; }
+.left  { grid-column: 1; grid-row: 2; }
+.down  { grid-column: 2; grid-row: 2; }
+.right { grid-column: 3; grid-row: 2; }
+
+.interact {
+    width: 60px; height: 60px;
+    background: rgba(30,30,60,0.9);
+    border-radius: 50%;
+    border: 2px solid #555;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    color: #ffcc00;
+    font-size: 11px;
+    font-family: monospace;
+    pointer-events: all;
+    user-select: none;
+    align-self: flex-end;
+}
+.interact:active { background: rgba(0,80,180,0.7); }
 </style>
 </head>
-
 <body>
 
 <div class="laptop">
-    <div class="desktop" id="desktop">
+  <!-- DESKTOP -->
+  <div class="desktop" id="desktop">
 
-        <!-- CURSOR -->
-        <div class="cursor" id="cursor"></div>
+    <!-- CURSOR -->
+    <div class="cursor" id="cursor"></div>
 
-        <!-- APPS -->
-        <div class="app app1" data-text="Browser">🌐<br>Browser</div>
-        <div class="app app2" data-text="Files">📁<br>Files</div>
-
-        <!-- TASKBAR -->
-        <div class="taskbar">
-            <button class="start" onclick="toggleStart()">Start</button>
-        </div>
-        <div class="start-menu" id="startMenu">
-            <button onclick="shutdown()">⏻ Shutdown</button>
-        </div>
-
+    <!-- ICONS -->
+    <div class="icon" style="top:20px; left:20px;" data-app="browser" id="icon-browser">
+      <span class="ico">🌐</span>Browser
+    </div>
+    <div class="icon" style="top:20px; left:100px;" data-app="files" id="icon-files">
+      <span class="ico">📁</span>Files
+    </div>
+    <div class="icon" style="top:110px; left:20px;" data-app="notes" id="icon-notes">
+      <span class="ico">📝</span>Notes
+    </div>
+    <div class="icon" style="top:110px; left:100px;" data-app="settings" id="icon-settings">
+      <span class="ico">⚙️</span>Settings
     </div>
 
-    <!-- CONTROLS -->
+    <!-- APP WINDOW -->
+    <div class="app-window" id="app-window">
+      <div class="app-titlebar">
+        <span class="app-title" id="app-title">App</span>
+        <button class="app-close" onclick="closeApp()">✕</button>
+      </div>
+      <div class="app-content" id="app-content"></div>
+    </div>
+
+    <!-- TASKBAR -->
+    <div class="taskbar">
+      <button class="start-btn" onclick="toggleStart()">⊞ Start</button>
+      <span class="taskbar-time" id="tb-time">--:--</span>
+    </div>
+
+    <!-- START MENU -->
+    <div class="start-menu" id="start-menu">
+      <button onclick="openApp('browser')">🌐 Browser</button>
+      <button onclick="openApp('files')">📁 Files</button>
+      <button onclick="openApp('notes')">📝 Notes</button>
+      <button onclick="openApp('settings')">⚙️ Settings</button>
+      <button style="border-top:1px solid rgba(255,255,255,0.15);" onclick="shutdown()">⏻ Shut Down</button>
+    </div>
+
+  </div><!-- /desktop -->
+
+  <!-- CONTROLS -->
+  <div class="controls-wrap">
     <div class="controls">
-        <button class="btn up">↑</button>
-        <button class="btn left">←</button>
-        <button class="btn down">↓</button>
-        <button class="btn right">→</button>
+      <button class="btn up">↑</button>
+      <button class="btn left">←</button>
+      <button class="btn down">↓</button>
+      <button class="btn right">→</button>
     </div>
+    <button class="interact" id="interact-btn">●</button>
+  </div>
 
-    <button class="interact"></button>
-
-</div>
+</div><!-- /laptop -->
 
 <script>
-const cursor = document.getElementById("cursor");
-const desktop = document.getElementById("desktop");
-const apps = document.querySelectorAll(".app");
+const cursorEl  = document.getElementById('cursor');
+const desktop   = document.getElementById('desktop');
+const startMenu = document.getElementById('start-menu');
 
-let x = 100, y = 100;
-const speed = 3;
-
+let cx = 200, cy = 150;
+const SPEED = 4;
 let keys = {up:false,down:false,left:false,right:false};
 
-/* LOOP */
+const apps = {
+    browser:  { title:'🌐 Browser',  content:'<p>No internet connection in this room.<br>Try again later.</p>' },
+    files:    { title:'📁 Files',    content:'<p>📂 Documents<br>📂 Downloads<br>📂 Pictures<br>📄 todo.txt<br>📄 notes.txt</p>' },
+    notes:    { title:'📝 Notepad',  content:'<textarea style="width:100%;height:100%;background:#0a0a1a;color:#ddd;border:none;font-family:monospace;font-size:12px;resize:none;outline:none;">Write something...</textarea>' },
+    settings: { title:'⚙️ Settings', content:'<p>🖥 Display: 1920×1080<br>🔊 Volume: 70%<br>🔒 Password: ••••••••<br>🌙 Theme: Dark</p>' },
+};
+
+function openApp(id) {
+    const app = apps[id];
+    if(!app) return;
+    document.getElementById('app-title').textContent = app.title;
+    document.getElementById('app-content').innerHTML = app.content;
+    document.getElementById('app-window').classList.add('open');
+    startMenu.classList.remove('open');
+}
+function closeApp() {
+    document.getElementById('app-window').classList.remove('open');
+}
+window.closeApp = closeApp;
+
+function toggleStart() {
+    startMenu.classList.toggle('open');
+}
+
+function shutdown() {
+    document.body.style.background = '#000';
+    document.querySelector('.laptop').style.opacity = '0';
+    document.querySelector('.laptop').style.transition = 'opacity 0.4s';
+    setTimeout(()=>{ window.location.href='index.html'; }, 500);
+}
+
+function interact() {
+    // Check if cursor is near an icon
+    const icons = document.querySelectorAll('.icon');
+    for(const icon of icons) {
+        const r = icon.getBoundingClientRect();
+        const dr = desktop.getBoundingClientRect();
+        const ix = r.left - dr.left + r.width/2;
+        const iy = r.top  - dr.top  + r.height/2;
+        if(Math.hypot(cx-ix, cy-iy) < 50) {
+            openApp(icon.dataset.app);
+            return;
+        }
+    }
+    // Check start button area
+    if(cy > desktop.clientHeight - 10) toggleStart();
+}
+
 function update() {
-    if (keys.up) y -= speed;
-    if (keys.down) y += speed;
-    if (keys.left) x -= speed;
-    if (keys.right) x += speed;
+    if(keys.up)    cy -= SPEED;
+    if(keys.down)  cy += SPEED;
+    if(keys.left)  cx -= SPEED;
+    if(keys.right) cx += SPEED;
 
-    x = Math.max(0, Math.min(desktop.clientWidth - 10, x));
-    y = Math.max(0, Math.min(desktop.clientHeight - 10, y));
+    cx = Math.max(0, Math.min(desktop.clientWidth  - 14, cx));
+    cy = Math.max(0, Math.min(desktop.clientHeight - 14, cy));
 
-    cursor.style.left = x + "px";
-    cursor.style.top = y + "px";
+    cursorEl.style.left = cx + 'px';
+    cursorEl.style.top  = cy + 'px';
+
+    // Hover highlight
+    const icons = document.querySelectorAll('.icon');
+    icons.forEach(icon => {
+        const r = icon.getBoundingClientRect();
+        const dr = desktop.getBoundingClientRect();
+        const ix = r.left - dr.left + r.width/2;
+        const iy = r.top  - dr.top  + r.height/2;
+        icon.classList.toggle('hovered', Math.hypot(cx-ix, cy-iy) < 45);
+    });
 
     requestAnimationFrame(update);
 }
 update();
 
-/* INTERACT */
-function interact() {
-    for (let app of apps) {
-        const ax = app.offsetLeft;
-        const ay = app.offsetTop;
+// Clock
+function tick() {
+    const now = new Date();
+    const h = String(now.getHours()).padStart(2,'0');
+    const m = String(now.getMinutes()).padStart(2,'0');
+    document.getElementById('tb-time').textContent = `${h}:${m}`;
+}
+setInterval(tick, 1000); tick();
 
-        const d = Math.hypot(x - ax, y - ay);
+// Input
+document.addEventListener('keydown', e => {
+    if(e.key==='ArrowUp'){keys.up=true;e.preventDefault();}
+    if(e.key==='ArrowDown'){keys.down=true;e.preventDefault();}
+    if(e.key==='ArrowLeft'){keys.left=true;e.preventDefault();}
+    if(e.key==='ArrowRight'){keys.right=true;e.preventDefault();}
+    if(e.key==='e'||e.key==='Enter') interact();
+});
+document.addEventListener('keyup', e => {
+    if(e.key==='ArrowUp')keys.up=false;
+    if(e.key==='ArrowDown')keys.down=false;
+    if(e.key==='ArrowLeft')keys.left=false;
+    if(e.key==='ArrowRight')keys.right=false;
+});
 
-        if (d < 60) {
-            alert(app.dataset.text + " opened!");
-        }
+function bindBtn(sel,key) {
+    const b = document.querySelector(sel);
+    if(!b)return;
+    b.addEventListener('touchstart',e=>{e.preventDefault();keys[key]=true},{passive:false});
+    b.addEventListener('touchend',e=>{e.preventDefault();keys[key]=false},{passive:false});
+    b.addEventListener('mousedown',()=>keys[key]=true);
+    b.addEventListener('mouseup',()=>keys[key]=false);
+    b.addEventListener('mouseleave',()=>keys[key]=false);
+}
+bindBtn('.up','up'); bindBtn('.down','down'); bindBtn('.left','left'); bindBtn('.right','right');
+document.getElementById('interact-btn').addEventListener('click', interact);
+
+// Close start menu when clicking elsewhere
+document.addEventListener('click', e => {
+    if(!e.target.closest('.start-btn') && !e.target.closest('.start-menu')) {
+        startMenu.classList.remove('open');
     }
-}
-
-/* INPUT */
-document.addEventListener("keydown", e=>{
-    if(e.key==="ArrowUp") keys.up=true;
-    if(e.key==="ArrowDown") keys.down=true;
-    if(e.key==="ArrowLeft") keys.left=true;
-    if(e.key==="ArrowRight") keys.right=true;
-    if(e.key==="e") interact();
 });
-document.addEventListener("keyup", e=>{
-    if(e.key==="ArrowUp") keys.up=false;
-    if(e.key==="ArrowDown") keys.down=false;
-    if(e.key==="ArrowLeft") keys.left=false;
-    if(e.key==="ArrowRight") keys.right=false;
-});
-
-/* MOBILE */
-function bind(sel,key){
-    const b=document.querySelector(sel);
-    b.addEventListener("touchstart",e=>{e.preventDefault();keys[key]=true});
-    b.addEventListener("touchend",()=>keys[key]=false);
-    b.addEventListener("mousedown",()=>keys[key]=true);
-    b.addEventListener("mouseup",()=>keys[key]=false);
-}
-bind(".up","up"); bind(".down","down"); bind(".left","left"); bind(".right","right");
-
-document.querySelector(".interact").onclick = interact;
-function toggleStart() {
-    const menu = document.getElementById("startMenu");
-    menu.style.display = (menu.style.display === "flex") ? "none" : "flex";
-}
-
-function shutdown() {
-    // Optional: small delay for realism
-    document.body.style.background = "black";
-
-    setTimeout(() => {
-        window.location.href = "index.html";
-    }, 500);
-}
 </script>
-
 </body>
 </html>

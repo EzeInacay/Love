@@ -1,338 +1,448 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Hallway</title>
-
 <style>
+* { box-sizing: border-box; }
 body {
     margin: 0;
-    background: black;
+    background: #111;
     display: flex;
     justify-content: center;
     align-items: center;
     height: 100vh;
+    overflow: hidden;
+    font-family: monospace;
 }
 .game {
     width: 360px;
     height: 640px;
     overflow: hidden;
     position: relative;
-    background: black;
-    border-radius: 20px;
+    background: #000;
+    image-rendering: pixelated;
 }
-
+/* WORLD: wide hallway */
 .world {
-    width: 1600px;
-    height: 700px;
+    /* Hallway: 1400px wide × 300px tall — dead end left, living room right */
+    width: 1400px;
+    height: 300px;
     position: absolute;
-    background: #2a2a3d;
+    background: #2a2214;
+    image-rendering: pixelated;
 }
 
-.heart {
+/* FLOOR */
+.floor {
     position: absolute;
-    width: 6px;
-    height: 6px;
-    background: red;
+    inset: 60px 0 40px 0;
+    background:
+        repeating-linear-gradient(90deg, rgba(0,0,0,0.07) 0px, rgba(0,0,0,0.07) 1px, transparent 1px, transparent 24px),
+        repeating-linear-gradient(0deg, rgba(0,0,0,0.07) 0px, rgba(0,0,0,0.07) 1px, transparent 1px, transparent 24px),
+        #3a2e1e;
+}
+
+/* WALLS */
+.wall-top {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 60px;
+    background: repeating-linear-gradient(90deg, #5a4a3a 0px, #5a4a3a 3px, #4a3a2a 3px, #4a3a2a 16px);
+    border-bottom: 3px solid #2a1a0a;
+}
+.wall-bottom {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 40px;
+    background: #3a2a1a;
+    border-top: 3px solid #1a0a00;
+}
+/* Dead end (left) */
+.wall-deadend {
+    position: absolute;
+    top: 0; left: 0;
+    width: 12px; height: 300px;
+    background: #2a1a0a;
+    border-right: 4px solid #1a0a00;
+}
+/* Living room opening (right) */
+.hall-opening {
+    position: absolute;
+    top: 60px; right: 0;
+    width: 20px;
+    height: 200px;
+    background: #4a3a2a;
+    border-left: 3px solid #1a0a00;
+}
+
+/* DOOR objects */
+.door-obj {
+    position: absolute;
+    width: 40px; height: 64px;
+    background: #7a5a2a;
+    border: 2px solid #3a2a0a;
+    border-bottom: none;
+}
+.door-obj::after {
+    content:''; position:absolute;
+    width: 6px; height: 6px;
+    background: #d4aa40;
+    border-radius: 50%;
+    right: 6px; top: 30px;
+}
+
+/* WALL LAMP decorations */
+.lamp {
+    position: absolute;
+    width: 16px; height: 24px;
+    background: #c8a030;
+    border: 2px solid #8a6820;
+}
+.lamp::after {
+    content:'';
+    position: absolute;
+    bottom: -12px; left: -4px;
+    width: 24px; height: 12px;
+    background: rgba(255,220,100,0.3);
+    border-radius: 0 0 50% 50%;
+}
+
+/* HEART PLAYER */
+.heart { position: absolute; width: 0; height: 0; z-index: 50; }
+.heart::before {
+    content: '';
+    position: absolute;
+    width: 4px; height: 4px;
+    background: #ff2a2a;
     box-shadow:
-        6px 0 black, 12px 0 black, 18px 0 black, 24px 0 black,
-        0 6px black, 30px 6px black,
-        0 12px black, 30px 12px black,
-        6px 18px black, 24px 18px black,
-        12px 24px black, 18px 24px black,
-
-        12px 6px red, 18px 6px red,
-        6px 12px red, 12px 12px red, 18px 12px red, 24px 12px red,
-        6px 18px red, 12px 18px red, 18px 18px red, 24px 18px red;
+        4px 0 #ff2a2a, 8px 0 #ff2a2a, 16px 0 #ff2a2a, 20px 0 #ff2a2a,
+        0px 4px #ff2a2a, 4px 4px #ff4444, 8px 4px #ff4444, 12px 4px #ff2a2a, 16px 4px #ff4444, 20px 4px #ff4444, 24px 4px #ff2a2a,
+        0px 8px #ff2a2a, 4px 8px #ff4444, 8px 8px #ff6666, 12px 8px #ff4444, 16px 8px #ff6666, 20px 8px #ff4444, 24px 8px #ff2a2a,
+        4px 12px #ff2a2a, 8px 12px #ff4444, 12px 12px #ff4444, 16px 12px #ff4444, 20px 12px #ff2a2a,
+        8px 16px #ff2a2a, 12px 16px #ff4444, 16px 16px #ff2a2a,
+        12px 20px #cc1a1a;
 }
 
-.object { position:absolute; background:#663; width:40px; height:70px; }
+/* LIGHTING */
+.darkness { position:absolute; inset:0; background:rgba(0,0,0,0.75); pointer-events:none; z-index:40; }
+.spotlight {
+    position:absolute; pointer-events:none; z-index:41;
+    width:200px; height:200px; border-radius:50%;
+    background: radial-gradient(circle, rgba(255,240,200,0.28) 0%, rgba(255,220,150,0.12) 40%, transparent 70%);
+    mix-blend-mode: screen;
+}
 
-.wall { position:absolute; background:#111; }
-
+/* DIALOG */
 .dialog {
-    position:absolute; top:0; width:100%;
-    background:rgba(0,0,0,0.8); color:white;
-    display:none; padding:10px;
+    position: absolute;
+    bottom: 180px; left: 10px; right: 10px;
+    background: rgba(0,0,0,0.92);
+    color: #fff;
+    border: 2px solid #888;
+    padding: 10px 12px;
+    display: none;
+    z-index: 100;
+    font-size: 13px;
+    line-height: 1.5;
+    border-radius: 4px;
+    font-family: monospace;
 }
-.light {
-    position:absolute;
-    width:200px;
-    height:200px;
-    pointer-events:none;
-    background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, rgba(0,0,0,0.9) 70%);
+.dialog button {
+    margin: 6px 4px 0 0;
+    padding: 4px 10px;
+    background: #333; color: #fff;
+    border: 1px solid #666;
+    cursor: pointer; font-family: monospace; font-size: 12px; border-radius: 2px;
+}
+.dialog button:hover { background: #555; }
+
+/* HINT */
+.hint {
+    position: absolute;
+    background: rgba(0,0,0,0.8);
+    color: #ffcc00;
+    font-size: 10px;
+    padding: 2px 5px;
+    border-radius: 2px;
+    white-space: nowrap;
+    pointer-events: none;
+    z-index: 60;
+    display: none;
+    font-family: monospace;
 }
 
+/* CONTROLS */
 .controls {
     position: absolute;
-    bottom: 20px;
-    left: 20px;
+    bottom: 20px; left: 16px;
     display: grid;
-    grid-template-columns: 50px 50px 50px;
-    grid-template-rows: 50px 50px;
-    gap: 6px;
-    z-index: 10;
+    grid-template-columns: 44px 44px 44px;
+    grid-template-rows: 44px 44px;
+    gap: 5px;
+    z-index: 150;
 }
-
 .btn {
-    background: #333;
-    color: white;
-    border: none;
-    border-radius: 10px;
-    font-size: 18px;
+    background: rgba(40,40,40,0.85);
+    color: #ccc;
+    border: 1px solid #555;
+    border-radius: 8px;
+    font-size: 16px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    user-select: none; touch-action: none;
 }
-.up { grid-column: 2; grid-row: 1; }
-.left { grid-column: 1; grid-row: 2; }
-.down { grid-column: 2; grid-row: 2; }
+.btn:active { background: rgba(80,80,80,0.9); }
+.up    { grid-column: 2; grid-row: 1; }
+.left  { grid-column: 1; grid-row: 2; }
+.down  { grid-column: 2; grid-row: 2; }
 .right { grid-column: 3; grid-row: 2; }
 
-/* INTERACT BUTTON */
 .interact {
     position: absolute;
-    bottom: 25px;
-    right: 25px;
-    width: 70px;
-    height: 70px;
-    background: #222;
+    bottom: 24px; right: 20px;
+    width: 64px; height: 64px;
+    background: rgba(30,30,30,0.9);
     border-radius: 50%;
-    border: 3px solid #555;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    border: 2px solid #666;
+    z-index: 150;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    color: #ffcc00; font-size: 11px; font-family: monospace;
+    user-select: none;
+}
+.interact:active { background: rgba(80,80,80,0.9); }
+
+#phone-btn {
+    position: absolute;
+    top: 10px; right: 10px;
+    width: 40px; height: 40px;
+    border-radius: 8px;
+    background: #222; color: white;
+    border: 1px solid #555; font-size: 18px;
+    z-index: 200; cursor: pointer;
 }
 
-.interact::after {
-    content: "";
-    width: 30px;
-    height: 30px;
-    background: #ffcc00;
-    border-radius: 50%;
+/* MAP LABEL */
+.map-label {
+    position: absolute;
+    background: rgba(0,0,0,0.6);
+    color: rgba(255,255,255,0.5);
+    font-size: 9px;
+    padding: 2px 4px;
+    border-radius: 2px;
+    pointer-events: none;
+    font-family: monospace;
 }
 </style>
 </head>
-
 <body>
 
 <div class="game" id="game">
-    <div class="world" id="world">
+  <div class="world" id="world">
 
-        <div class="light" id="light"></div>
-        <div class="heart" id="heart"></div>
+    <!-- WALLS & FLOOR -->
+    <div class="floor"></div>
+    <div class="wall-top"></div>
+    <div class="wall-bottom"></div>
+    <div class="wall-deadend"></div>
+    <div class="hall-opening"></div>
 
-        <!-- WALLS (top & bottom) -->
-        <div class="wall" style="top:0; left:0; width:1200px; height:40px;"></div>
-        <div class="wall" style="bottom:0; left:0; width:1200px; height:40px;"></div>
+    <!-- WALL LAMPS -->
+    <div class="lamp" style="top:36px; left:200px;"></div>
+    <div class="lamp" style="top:36px; left:500px;"></div>
+    <div class="lamp" style="top:36px; left:800px;"></div>
+    <div class="lamp" style="top:36px; left:1100px;"></div>
 
-        <!-- DEAD END WALL (left) -->
-        <div class="wall" style="top:0; left:0; width:40px; height:400px;"></div>
+    <!-- YOUR ROOM DOOR (player spawns near here) -->
+    <div class="door-obj" id="door-room"
+         style="top:60px; left:760px;"
+         data-text="Your room door."
+         data-interact-w="80" data-interact-h="90"></div>
+    <div class="map-label" style="top:130px; left:750px;">YOUR ROOM</div>
 
-        <!-- YOUR ROOM -->
-        <div class="object door room"
-         style="top:150px; left:800px;"
-         data-text="Your room"
-         data-radius="100"
-         data-collidable="false"></div>
+    <!-- NEIGHBOR DOOR (right of yours) -->
+    <div class="door-obj" id="door-neighbor"
+         style="top:60px; left:860px;"
+         data-text="Your neighbor's door. It's quiet."
+         data-interact-w="80" data-interact-h="90"></div>
+    <div class="map-label" style="top:130px; left:855px;">NEIGHBOR</div>
 
-        <!-- NEIGHBOR -->
-        <div class="object door neighbor"
-         style="top:150px; left:900px;"
-         data-text="Neighbor's room"
-         data-radius="100"
-         data-collidable="false"></div>
+    <!-- LIVING ROOM (far right, hallway opens into it) -->
+    <div class="door-obj" id="door-living"
+         style="top:60px; left:1320px;"
+         data-text="The living room."
+         data-interact-w="80" data-interact-h="90"></div>
+    <div class="map-label" style="top:130px; left:1290px;">LIVING ROOM</div>
 
-        <!-- LIVING ROOM -->
-        <div class="object door living"
-        style="top:150px; left:1100px;"
-         data-text="Living Room"
-         data-radius="120"
-         data-collidable="false"></div>
+    <!-- DEAD END marker -->
+    <div class="map-label" style="top:120px; left:20px;">DEAD END</div>
 
-    </div>
+    <!-- LIGHTING -->
+    <div class="darkness"></div>
+    <div class="spotlight" id="spotlight"></div>
 
-    <div class="dialog" id="dialog"></div>
-    <button id="phone-btn" style="
-    position:absolute;
-    top:10px;
-    right:10px;
-    width:50px;
-    height:50px;
-    border-radius:10px;
-    background:#222;
-    color:white;
-    border:none;
-    font-size:18px;
-    z-index:20;"  >📱</button>
-    <div class="controls">
-        <button class="btn up"></button>
-        <button class="btn left"></button>
-        <button class="btn down"></button>
-        <button class="btn right"></button>
-    </div>
+    <!-- PLAYER -->
+    <div class="heart" id="heart"></div>
+    <div class="hint" id="hint">Press ● to interact</div>
 
-    <button class="interact"></button>
-    </div>
+  </div><!-- /world -->
+
+  <div class="dialog" id="dialog"></div>
+  <button id="phone-btn">📱</button>
+
+  <div class="controls">
+    <button class="btn up">↑</button>
+    <button class="btn left">←</button>
+    <button class="btn down">↓</button>
+    <button class="btn right">→</button>
+  </div>
+  <button class="interact" id="interact-btn">●</button>
 </div>
 
 <script>
-const heart = document.getElementById("heart");
-const world = document.getElementById("world");
-const game = document.getElementById("game");
-const dialog = document.getElementById("dialog");
-const light = document.getElementById("light");
+const heart    = document.getElementById('heart');
+const world    = document.getElementById('world');
+const game     = document.getElementById('game');
+const dialog   = document.getElementById('dialog');
+const spotlight= document.getElementById('spotlight');
+const hint     = document.getElementById('hint');
 
-const objects = document.querySelectorAll(".object");
+const WORLD_W = 1400, WORLD_H = 300;
+const GAME_W  = 360,  GAME_H  = 640;
+const PW = 28, PH = 24;
+const SPEED = 2.5;
 
-let x = 0, y = 0;
-const speed = 2;
-
+// Spawn near your room door
+let px = 790, py = 140;
 let keys = {up:false,down:false,left:false,right:false};
+let dialogOpen = false;
 
-/* INIT (per room) */
-function initGame(config) {
-    x = config.spawn.x;
-    y = config.spawn.y;
+const walls = [
+    [0,0,12,WORLD_H],         // dead end
+    [0,0,WORLD_W,60],         // top wall
+    [0,260,WORLD_W,40],       // bottom wall
+    [1380,60,20,200],         // right wall (before living room opening)
+];
 
-    world.style.width = config.worldSize.width + "px";
-    world.style.height = config.worldSize.height + "px";
-}
-
-/* COLLISION */
-function isColliding(nx, ny) {
-    for (let obj of objects) {
-        if (obj.dataset.collidable === "false") continue;
-
-        const r = obj.getBoundingClientRect();
-        const wr = world.getBoundingClientRect();
-
-        const ox = r.left - wr.left;
-        const oy = r.top - wr.top;
-
-        if (
-            nx < ox + obj.offsetWidth &&
-            nx + 20 > ox &&
-            ny < oy + obj.offsetHeight &&
-            ny + 20 > oy
-        ) return true;
+function isColliding(nx,ny) {
+    for(const [wx,wy,ww,wh] of walls) {
+        if(nx<wx+ww && nx+PW>wx && ny<wy+wh && ny+PH>wy) return true;
     }
     return false;
 }
 
-/* LOOP */
+const interactables = [
+    { id:'door-room',     x:760,  y:60,  iw:80, ih:90 },
+    { id:'door-neighbor', x:860,  y:60,  iw:80, ih:90 },
+    { id:'door-living',   x:1320, y:60,  iw:80, ih:90 },
+];
+
+function getNearby() {
+    for(const obj of interactables) {
+        const dx = Math.abs(px + PW/2 - (obj.x + obj.iw/2));
+        const dy = Math.abs(py + PH/2 - (obj.y + obj.ih/2));
+        if(dx < obj.iw/2 + PW/2 && dy < obj.ih/2 + PH/2) return obj;
+    }
+    return null;
+}
+
+function interact() {
+    if(dialogOpen) { closeDialog(); return; }
+    const obj = getNearby();
+    if(!obj) return;
+    const el = document.getElementById(obj.id);
+    const text = el.dataset.text;
+
+    if(obj.id === 'door-room') {
+        showDialog(`${text}<br><br>
+            <button onclick="window.location.href='index.html'">Go In</button>
+            <button onclick="closeDialog()">Stay</button>`);
+    } else if(obj.id === 'door-living') {
+        showDialog(`${text}<br><br>
+            <button onclick="window.location.href='livingroom.html'">Go In</button>
+            <button onclick="closeDialog()">Stay</button>`);
+    } else if(obj.id === 'door-neighbor') {
+        showDialog(`${text} It's locked.<br><br>
+            <button onclick="closeDialog()">OK</button>`);
+    }
+}
+
+function showDialog(html) {
+    dialog.innerHTML = html;
+    dialog.style.display = 'block';
+    dialogOpen = true;
+}
+function closeDialog() {
+    dialog.style.display = 'none';
+    dialogOpen = false;
+}
+window.closeDialog = closeDialog;
+
 function update() {
-    let nx = x;
-    let ny = y;
+    if(!dialogOpen) {
+        let nx = px, ny = py;
+        if(keys.up)    ny -= SPEED;
+        if(keys.down)  ny += SPEED;
+        if(keys.left)  nx -= SPEED;
+        if(keys.right) nx += SPEED;
+        if(!isColliding(nx,py)) px = nx;
+        if(!isColliding(px,ny)) py = ny;
+        px = Math.max(12, Math.min(WORLD_W - PW - 20, px));
+        py = Math.max(60, Math.min(WORLD_H - PH - 40, py));
+    }
 
-    if (keys.up) ny -= speed;
-    if (keys.down) ny += speed;
-    if (keys.left) nx -= speed;
-    if (keys.right) nx += speed;
+    heart.style.left = px + 'px';
+    heart.style.top  = py + 'px';
+    spotlight.style.left = (px - 86) + 'px';
+    spotlight.style.top  = (py - 86) + 'px';
 
-    if (!isColliding(nx, y)) x = nx;
-    if (!isColliding(x, ny)) y = ny;
+    let camX = px - GAME_W/2 + PW/2;
+    let camY = py - GAME_H/2 + PH/2;
+    camX = Math.max(0, Math.min(WORLD_W - GAME_W, camX));
+    camY = Math.max(0, Math.min(WORLD_H - GAME_H, camY));
+    world.style.transform = `translate(${-camX}px,${-camY}px)`;
 
-    x = Math.max(0, Math.min(world.clientWidth - 30, x));
-    y = Math.max(0, Math.min(world.clientHeight - 30, y));
+    const near = getNearby();
+    if(near) {
+        hint.style.display = 'block';
+        hint.style.left = (near.x - camX + near.iw/2 - 40) + 'px';
+        hint.style.top  = (near.y - camY - 18) + 'px';
+    } else {
+        hint.style.display = 'none';
+    }
 
-    heart.style.left = x + "px";
-    heart.style.top = y + "px";
-
-    light.style.left = (x - 100) + "px";
-    light.style.top = (y - 100) + "px";
-
-    updateCamera();
     requestAnimationFrame(update);
 }
 update();
 
-/* CAMERA */
-function updateCamera() {
-    let camX = x - game.clientWidth / 2;
-    let camY = y - game.clientHeight / 2;
-
-    camX = Math.max(0, Math.min(world.clientWidth - game.clientWidth, camX));
-    camY = Math.max(0, Math.min(world.clientHeight - game.clientHeight, camY));
-
-    world.style.transform = `translate(${-camX}px, ${-camY}px)`;
-}
-
-/* INTERACT (same logic reused) */
-function interact() {
-    for (let obj of objects) {
-        const ox = obj.offsetLeft;
-        const oy = obj.offsetTop;
-        const d = Math.hypot(x - ox, y - oy);
-
-        if (d < (parseInt(obj.dataset.radius) || 60)) {
-
-            const text = obj.dataset.text;
-
-            // 🚪 DOORS
-            if (obj.classList.contains("door")) {
-                dialog.innerHTML = `
-                    ${text} <br>
-                    <button id="go">Go Through</button>
-                    <button id="stay">Stay</button>
-                `;
-
-                document.getElementById("go").onclick = () => {
-
-                    if (obj.classList.contains("room")) {
-                        window.location.href = "index.html";
-                    }
-                    else if (obj.classList.contains("living")) {
-                        window.location.href = "livingroom.html";
-                    }
-                    else if (obj.classList.contains("neighbor")) {
-                        alert("It's locked."); // placeholder
-                    }
-                };
-
-                document.getElementById("stay").onclick = () => {
-                    dialog.style.display = "none";
-                };
-            }
-
-            // DEFAULT
-            else {
-                dialog.innerText = text;
-            }
-
-            dialog.style.display = "block";
-            return;
-        }
-    }
-}
-
-/* INPUT */
-document.addEventListener("keydown", e=>{
-    if(e.key==="ArrowUp") keys.up=true;
-    if(e.key==="ArrowDown") keys.down=true;
-    if(e.key==="ArrowLeft") keys.left=true;
-    if(e.key==="ArrowRight") keys.right=true;
-    if(e.key==="e") interact();
+document.addEventListener('keydown', e => {
+    if(e.key==='ArrowUp'){keys.up=true;e.preventDefault();}
+    if(e.key==='ArrowDown'){keys.down=true;e.preventDefault();}
+    if(e.key==='ArrowLeft'){keys.left=true;e.preventDefault();}
+    if(e.key==='ArrowRight'){keys.right=true;e.preventDefault();}
+    if(e.key==='e'||e.key==='Enter') interact();
 });
-document.addEventListener("keyup", e=>{
-    if(e.key==="ArrowUp") keys.up=false;
-    if(e.key==="ArrowDown") keys.down=false;
-    if(e.key==="ArrowLeft") keys.left=false;
-    if(e.key==="ArrowRight") keys.right=false;
+document.addEventListener('keyup', e => {
+    if(e.key==='ArrowUp')keys.up=false;
+    if(e.key==='ArrowDown')keys.down=false;
+    if(e.key==='ArrowLeft')keys.left=false;
+    if(e.key==='ArrowRight')keys.right=false;
 });
 
-/* MOBILE CONTROLS */
-function bind(sel,key){
+function bindBtn(sel,key) {
     const b=document.querySelector(sel);
-    b.addEventListener("touchstart",e=>{e.preventDefault();keys[key]=true});
-    b.addEventListener("touchend",()=>keys[key]=false);
-    b.addEventListener("mousedown",()=>keys[key]=true);
-    b.addEventListener("mouseup",()=>keys[key]=false);
+    if(!b)return;
+    b.addEventListener('touchstart',e=>{e.preventDefault();keys[key]=true},{passive:false});
+    b.addEventListener('touchend',e=>{e.preventDefault();keys[key]=false},{passive:false});
+    b.addEventListener('mousedown',()=>keys[key]=true);
+    b.addEventListener('mouseup',()=>keys[key]=false);
+    b.addEventListener('mouseleave',()=>keys[key]=false);
 }
-bind(".up","up"); bind(".down","down"); bind(".left","left"); bind(".right","right");
-
-document.querySelector(".interact").onclick = interact;
-initGame({
-    spawn: { x: 750, y: 200 }
-});
+bindBtn('.up','up'); bindBtn('.down','down'); bindBtn('.left','left'); bindBtn('.right','right');
+document.getElementById('interact-btn').addEventListener('click', interact);
+document.getElementById('phone-btn').onclick = ()=>window.location.href='phone.html';
 </script>
-
 </body>
 </html>

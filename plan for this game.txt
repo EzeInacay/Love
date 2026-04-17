@@ -1,0 +1,49 @@
+a mini game using html css and mostly js
+portait size so its playable on the phone
+a heart in the center and on the bottom left are arrow keys, the heart can be controlled using the arrow keys on the screen or the arrow keys on your keyboard
+
+The setting would be in a room, an undertale like look for a room (pixelated)
+in the room the single bed would be on the top left facing the right, and on the south of the bed would be a workstation/table thats againts the wall with a laptop, on the foot side of the bed would be a drawer and cabinet, on the center of the room would be a carpet, the door would be on the center right wall of the room, on the bottom of the room would be barbells, and a bench for working out
+
+with the map layed out it should be bigger than the camera(what we see), while moving through the map the camera should follow the player with it in the center until it hits a wall then it should move freely
+
+solid collision (rectangle hitboxes) pixel art assets (actual bed/table sprites) lighting system (dark room, spotlight on player 👀) the arrow buttons got ruined make the room smaller
+
+since collision has been established, expand the hitbox of the objects but not the collision so when a player is colliding with it it would hit  the interact, 
+-we should be able to go over and collide with the carpet thats in the middle
+- make the table thats near the bed be against the left wall vertically not horizontally 
+- make the room a lil bit smaller
+- put some placeholder for the sprites I'll add later on, 
+
+when interacting with the door give an option to go outside and when they go outside they go to a link that i'll put later on
+
+how about we add more interactable objects in the room, like a mirror, a chair, picture frames, a drawer neer the door, a trash can,
+
+phone.html
+- on the top right of the camera there's a button for a phone and when clicked direct to phone.html
+- Give it a light blue gradiant background and on the center will have a digital clock and date
+- and on the bottome center there would be a home button, clicking it takes you back to index.html
+- on the left of the home button would be a camera icon clicking it would make an image, the same size as the phone, to pop up (put a place holder there so I can put whatever image I want
+)
+
+laptop.html
+- give an option when interacting with the table to open laptop or not
+- just like the heart we control, in the laptop.html we have a cursor/pointer
+- its a natural laptop with windows, with a few apps, the start button on the bottom left corner and a task bar at the bottom row
+- the laptop screen is alway landscape and responsive, depending on the screen size it would always fit the width.
+- the arrow buttons and interact button would be the same as in the 
+index.html
+- add a shutdown that returns us to the room
+
+livingroom.html
+- interacting with the door on the right will lead to livingroom.html
+- when going outside the you get to a long hallway at the left is a deadend, going right will lead to the living room that is box shaped
+- our door is near the end of the hall way and next to our door to the right is another door
+- in the living room there are another 2 doors on the left, 1 leading to the basement and another to the restroom
+- also in the living room there is a sofa and a tv, the tv is against the wall on the top/north of the room 
+- on the left of the living room is a door to the outside
+- all the things I mentioned are interactable objects with dialog showing up everytime we touch it
+- and doors should have option to go throught them or not (put placeholder)
+
+- need to draw the template for the map
+- 
