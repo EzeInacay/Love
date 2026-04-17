@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Basement</title>
+<style>
+* { box-sizing:border-box; }
+body { margin:0; background:#000; display:flex; justify-content:center; align-items:center; height:100vh; overflow:hidden; font-family:monospace; }
+.game { width:360px; height:640px; overflow:hidden; position:relative; background:#000; image-rendering:pixelated; }
+.world { width:520px; height:560px; position:absolute; background:#0e0c10; image-rendering:pixelated; }
+
+/* FLOOR — rough concrete */
+.floor {
+  position:absolute; inset:40px 0 0 0;
+  background:
+    repeating-linear-gradient(90deg,rgba(255,255,255,0.03) 0px,rgba(255,255,255,0.03) 1px,transparent 1px,transparent 20px),
+    repeating-linear-gradient(0deg,rgba(255,255,255,0.03) 0px,rgba(255,255,255,0.03) 1px,transparent 1px,transparent 20px),
+    #1a1818;
+}
+.wall-top { position:absolute; top:0;left:0;right:0;height:40px; background:repeating-linear-gradient(90deg,#2a2228 0px,#2a2228 4px,#1e1c20 4px,#1e1c20 20px); border-bottom:3px solid #0a080c; }
+.wall-left { position:absolute; top:0;left:0;width:8px;height:100%; background:#1a1820; border-right:2px solid #0a080c; }
+.wall-right { position:absolute; top:0;right:0;width:8px;height:100%; background:#1a1820; border-left:2px solid #0a080c; }
+.wall-bottom { position:absolute; bottom:0;left:0;right:0;height:8px; background:#1a1820; border-top:2px solid #0a080c; }
+
+/* CRACKS on walls */
+.crack { position:absolute; background:rgba(0,0,0,0.4); }
+
+.object { position:absolute; image-rendering:pixelated; }
+
+/* LADDER */
+.ladder {
+  width:24px; height:72px;
+  background:transparent;
+  border-left:4px solid #7a6040;
+  border-right:4px solid #7a6040;
+}
+.ladder::before { /* rungs */
+  content:''; position:absolute;
+  left:-4px; right:-4px;
+  top:0; height:100%;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0px, transparent 10px,
+    #7a6040 10px, #7a6040 14px,
+    transparent 14px, transparent 24px
+  );
+}
+.ladder-label { position:absolute; font-size:9px; color:rgba(255,200,80,0.5); font-family:monospace; pointer-events:none; white-space:nowrap; }
+
+/* BOXES */
+.box {
+  width:44px; height:36px;
+  background:#4a3820;
+  border:2px solid #2a1808;
+  box-shadow:inset 1px 1px 0 #6a5830;
+}
+.box::after { /* tape cross */
+  content:''; position:absolute;
+  inset:4px;
+  background: linear-gradient(transparent 45%, rgba(0,0,0,0.2) 45%, rgba(0,0,0,0.2) 55%, transparent 55%),
+              linear-gradient(90deg, transparent 45%, rgba(0,0,0,0.2) 45%, rgba(0,0,0,0.2) 55%, transparent 55%);
+}
+
+/* BOXES stack */
+.box-stack { position:absolute; }
+
+/* DOLL — sitting on top of boxes */
+.doll-container {
+  position:absolute;
+  cursor:pointer;
+}
+.doll-sprite {
+  width:28px; height:44px;
+  background:transparent;
+  position:relative;
+}
+/* doll head */
+.doll-sprite::before {
+  content:''; position:absolute;
+  top:0; left:4px; width:20px; height:18px;
+  background:#e8d0b8;
+  border:2px solid #b09080;
+  border-radius:50% 50% 40% 40%;
+}
+/* doll body */
+.doll-sprite::after {
+  content:''; position:absolute;
+  top:16px; left:2px; width:24px; height:20px;
+  background:#d04060;
+  border:2px solid #a02040;
+  border-radius:2px;
+}
+
+/* DOLL EYES — two tiny dots */
+.doll-eyes {
+  position:absolute;
+  top:5px; left:9px;
+  width:12px; height:4px;
+}
+.doll-eyes::before, .doll-eyes::after {
+  content:''; position:absolute;
+  width:4px; height:4px;
+  background:#111;
+  border-radius:50%;
+  border:1px solid #222;
+}
+.doll-eyes::before { left:0; }
+.doll-eyes::after { right:0; }
+
+/* DOLL MOUTH */
+.doll-mouth {
+  position:absolute;
+  top:12px; left:8px;
+  width:12px; height:2px;
+  background:#a05050;
+  border-radius:1px;
+}
+
+/* PIPE on wall */
+.pipe { position:absolute; background:#3a3a3a; border:2px solid #222; }
+
+/* SHELF */
+.shelf { position:absolute; background:#3a2818; border:2px solid #1a1008; height:8px; }
+
+/* OLD ITEMS on shelf */
+.jar { position:absolute; background:rgba(100,140,80,0.5); border:2px solid #4a6030; border-radius:2px 2px 4px 4px; }
+
+/* BARE BULB light source visual */
+.bulb {
+  position:absolute;
+  width:12px; height:16px;
+  background:#fff;
+  border-radius:50% 50% 30% 30%;
+  box-shadow:0 0 20px 10px rgba(255,230,150,0.3), 0 0 60px 30px rgba(255,200,80,0.1);
+}
+.bulb::before { /* wire */
+  content:''; position:absolute;
+  top:-20px; left:50%; transform:translateX(-50%);
+  width:2px; height:20px;
+  background:#666;
+}
+
+/* HEART */
+.heart { position:absolute; width:0; height:0; z-index:50; }
+.heart::before {
+  content:''; position:absolute; width:4px; height:4px; background:#ff2a2a;
+  box-shadow:
+    4px 0 #ff2a2a,8px 0 #ff2a2a,16px 0 #ff2a2a,20px 0 #ff2a2a,
+    0 4px #ff2a2a,4px 4px #ff4444,8px 4px #ff4444,12px 4px #ff2a2a,16px 4px #ff4444,20px 4px #ff4444,24px 4px #ff2a2a,
+    0 8px #ff2a2a,4px 8px #ff4444,8px 8px #ff6666,12px 8px #ff4444,16px 8px #ff6666,20px 8px #ff4444,24px 8px #ff2a2a,
+    4px 12px #ff2a2a,8px 12px #ff4444,12px 12px #ff4444,16px 12px #ff4444,20px 12px #ff2a2a,
+    8px 16px #ff2a2a,12px 16px #ff4444,16px 16px #ff2a2a,
+    12px 20px #cc1a1a;
+}
+
+/* LIGHTING — very dark, dim yellow light */
+.darkness { position:absolute; inset:0; pointer-events:none; z-index:40; background:rgba(0,0,0,0.82); }
+.spotlight {
+  position:absolute; pointer-events:none; z-index:41; width:180px; height:180px; border-radius:50%;
+  background:radial-gradient(circle,rgba(255,220,120,0.25) 0%,rgba(255,180,60,0.10) 40%,transparent 70%);
+  mix-blend-mode:screen;
+}
+/* Doll's own eerie glow */
+.doll-glow {
+  position:absolute; pointer-events:none; z-index:39; width:80px; height:80px; border-radius:50%;
+  background:radial-gradient(circle,rgba(200,50,80,0.10) 0%,transparent 70%);
+  mix-blend-mode:screen;
+  transition:opacity 0.5s;
+}
+
+/* DIALOG */
+.dialog { position:absolute; bottom:180px; left:10px; right:10px; background:rgba(0,0,0,0.95); color:#fff; border:2px solid #555; padding:10px 12px; display:none; z-index:100; font-size:13px; line-height:1.5; border-radius:4px; font-family:monospace; }
+.dialog button { margin:6px 4px 0 0; padding:4px 10px; background:#222; color:#fff; border:1px solid #666; cursor:pointer; font-family:monospace; font-size:12px; border-radius:2px; }
+.dialog button:hover { background:#444; }
+.hint { position:absolute; background:rgba(0,0,0,0.85); color:#ffcc00; font-size:10px; padding:2px 5px; border-radius:2px; white-space:nowrap; pointer-events:none; z-index:60; display:none; font-family:monospace; }
+
+#phone-btn { position:absolute; top:10px; right:10px; width:40px; height:40px; border-radius:8px; background:#111; color:white; border:1px solid #444; font-size:18px; z-index:200; cursor:pointer; }
+.controls { position:absolute; bottom:20px; left:16px; display:grid; grid-template-columns:44px 44px 44px; grid-template-rows:44px 44px; gap:5px; z-index:150; }
+.btn { background:rgba(20,20,20,0.9); color:#aaa; border:1px solid #444; border-radius:8px; font-size:16px; display:flex; align-items:center; justify-content:center; cursor:pointer; user-select:none; touch-action:none; }
+.btn:active { background:rgba(60,60,60,0.9); }
+.up{grid-column:2;grid-row:1;}.left{grid-column:1;grid-row:2;}.down{grid-column:2;grid-row:2;}.right{grid-column:3;grid-row:2;}
+.interact { position:absolute; bottom:24px; right:20px; width:64px; height:64px; background:rgba(20,20,20,0.95); border-radius:50%; border:2px solid #555; z-index:150; cursor:pointer; display:flex; align-items:center; justify-content:center; color:#ffcc00; font-size:11px; font-family:monospace; user-select:none; }
+.interact:active { background:rgba(60,60,60,0.9); }
+</style>
+</head>
+<body>
+<div class="game" id="game">
+  <div class="world" id="world">
+    <div class="floor"></div>
+    <div class="wall-top"></div>
+    <div class="wall-left"></div>
+    <div class="wall-right"></div>
+    <div class="wall-bottom"></div>
+
+    <!-- BARE BULB -->
+    <div class="bulb" style="top:44px;left:250px;"></div>
+
+    <!-- PIPES on walls -->
+    <div class="pipe" style="top:60px;left:60px;width:200px;height:10px;"></div>
+    <div class="pipe" style="top:60px;left:260px;width:10px;height:80px;"></div>
+
+    <!-- CRACK marks -->
+    <div class="crack" style="top:80px;left:120px;width:2px;height:30px;transform:rotate(10deg);"></div>
+    <div class="crack" style="top:100px;left:340px;width:2px;height:20px;transform:rotate(-5deg);"></div>
+
+    <!-- SHELF -->
+    <div class="shelf" style="top:130px;left:350px;width:140px;"></div>
+    <div class="jar" style="top:110px;left:360px;width:18px;height:20px;" data-text="An old jar. Something floats inside. Don't look too long."></div>
+    <div class="jar" style="top:112px;left:390px;width:14px;height:18px;" data-text="Another jar. Sealed tight."></div>
+    <div class="object" style="top:112px;left:416px;width:20px;height:18px;background:#3a1a10;border:2px solid #1a0a00;" data-text="A dusty old book. The title has worn off."></div>
+
+    <!-- OLD FURNITURE -->
+    <div class="object" style="top:180px;left:360px;width:100px;height:60px;background:#2a1e14;border:2px solid #1a0e0a;" data-text="An old covered piece of furniture. Something under there."></div>
+
+    <!-- LADDER — near left wall, player spawns here -->
+    <div class="object ladder" style="top:200px;left:30px;" id="ladder-obj" data-text="The ladder back up to the living room."></div>
+    <div class="ladder-label" style="top:278px;left:16px;">▲ UP</div>
+
+    <!-- BOXES STACK — far right side -->
+    <div class="object box" style="top:380px;left:380px;"></div>
+    <div class="object box" style="top:348px;left:384px;width:38px;height:30px;"></div>
+    <div class="object box" style="top:322px;left:388px;width:30px;height:26px;"></div>
+
+    <!-- DOLL ON BOXES -->
+    <div class="doll-container" id="doll-obj" style="top:278px;left:382px;"
+         data-text="A porcelain doll sitting on the boxes. It stares at you with unblinking eyes.">
+      <div class="doll-sprite">
+        <div class="doll-eyes"></div>
+        <div class="doll-mouth"></div>
+      </div>
+    </div>
+    <div class="doll-glow" id="doll-glow" style="top:260px;left:364px;"></div>
+
+    <!-- OLD ROCKING CHAIR -->
+    <div class="object" style="top:300px;left:120px;width:36px;height:40px;background:#2e1e10;border:2px solid #1a0e00;" data-text="An old rocking chair. It's tilted slightly. No one sits here."></div>
+
+    <!-- DARKNESS & LIGHTING -->
+    <div class="darkness"></div>
+    <div class="spotlight" id="spotlight"></div>
+
+    <div class="heart" id="heart"></div>
+    <div class="hint" id="hint">Press ● to interact</div>
+  </div>
+
+  <div class="dialog" id="dialog"></div>
+  <button id="phone-btn">📱</button>
+  <div class="controls">
+    <button class="btn up">↑</button>
+    <button class="btn left">←</button>
+    <button class="btn down">↓</button>
+    <button class="btn right">→</button>
+  </div>
+  <button class="interact" id="interact-btn">●</button>
+</div>
+<script>
+const heart=document.getElementById('heart'),world=document.getElementById('world'),game=document.getElementById('game'),dialog=document.getElementById('dialog'),spotlight=document.getElementById('spotlight'),hint=document.getElementById('hint');
+const WORLD_W=520,WORLD_H=560,GAME_W=360,GAME_H=640,PW=28,PH=24,SPEED=2.5;
+// Spawn near ladder
+let px=60,py=300,dialogOpen=false;
+let keys={up:false,down:false,left:false,right:false};
+
+const collidables=[
+  [0,0,WORLD_W,8],[0,0,8,WORLD_H],[WORLD_W-8,0,8,WORLD_H],[0,WORLD_H-8,WORLD_W,8],
+  [0,40,WORLD_W,8],
+  [350,110,140,8],  // shelf
+  [360,170,100,60], // covered furniture
+  [380,320,60,100], // box stack (solid)
+  [120,300,36,40],  // rocking chair
+];
+function isColliding(nx,ny){for(const[cx,cy,cw,ch]of collidables){if(nx<cx+cw&&nx+PW>cx&&ny<cy+ch&&ny+PH>cy)return true;}return false;}
+
+const allObjs=document.querySelectorAll('[data-text]');
+function getNearby(){
+  for(const obj of allObjs){
+    const ox=parseInt(obj.style.left)||0,oy=parseInt(obj.style.top)||0;
+    const ow=obj.offsetWidth||36,oh=obj.offsetHeight||36;
+    const dx=Math.abs(px+PW/2-(ox+ow/2)),dy=Math.abs(py+PH/2-(oy+oh/2));
+    if(dx<ow/2+PW/2+24&&dy<oh/2+PH/2+24)return obj;
+  }return null;
+}
+
+function interact(){
+  if(dialogOpen){closeDialog();return;}
+  const obj=getNearby();if(!obj)return;
+  const text=obj.dataset.text;
+  if(obj.id==='ladder-obj'){
+    showDialog(`${text}<br><br><button onclick="window.location.href='livingroom.html'">Climb Up</button><button onclick="closeDialog()">Stay</button>`);
+  }else if(obj.id==='doll-obj'){
+    showDialog(`${text}<br><br><button onclick="window.location.href='doll.html'">Get Closer...</button><button onclick="closeDialog()">Step Back</button>`);
+  }else{
+    showDialog(text+'<br><br><button onclick="closeDialog()">OK</button>');
+  }
+}
+function showDialog(h){dialog.innerHTML=h;dialog.style.display='block';dialogOpen=true;}
+function closeDialog(){dialog.style.display='none';dialogOpen=false;}
+window.closeDialog=closeDialog;
+
+function update(){
+  if(!dialogOpen){
+    let nx=px,ny=py;
+    if(keys.up)ny-=SPEED;if(keys.down)ny+=SPEED;if(keys.left)nx-=SPEED;if(keys.right)nx+=SPEED;
+    if(!isColliding(nx,py))px=nx;if(!isColliding(px,ny))py=ny;
+    px=Math.max(8,Math.min(WORLD_W-PW-8,px));py=Math.max(48,Math.min(WORLD_H-PH-8,py));
+  }
+  heart.style.left=px+'px';heart.style.top=py+'px';
+  spotlight.style.left=(px-76)+'px';spotlight.style.top=(py-76)+'px';
+  let camX=px-GAME_W/2+PW/2,camY=py-GAME_H/2+PH/2;
+  camX=Math.max(0,Math.min(WORLD_W-GAME_W,camX));camY=Math.max(0,Math.min(WORLD_H-GAME_H,camY));
+  world.style.transform=`translate(${-camX}px,${-camY}px)`;
+  const near=getNearby();
+  if(near){
+    const ox=parseInt(near.style.left)||0,ow=near.offsetWidth||36,oy=parseInt(near.style.top)||0;
+    hint.style.display='block';hint.style.left=(ox-camX+ow/2-40)+'px';hint.style.top=(oy-camY-18)+'px';
+  }else hint.style.display='none';
+  requestAnimationFrame(update);
+}
+update();
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowUp'){keys.up=true;e.preventDefault();}if(e.key==='ArrowDown'){keys.down=true;e.preventDefault();}
+  if(e.key==='ArrowLeft'){keys.left=true;e.preventDefault();}if(e.key==='ArrowRight'){keys.right=true;e.preventDefault();}
+  if(e.key==='e'||e.key==='Enter')interact();
+});
+document.addEventListener('keyup',e=>{if(e.key==='ArrowUp')keys.up=false;if(e.key==='ArrowDown')keys.down=false;if(e.key==='ArrowLeft')keys.left=false;if(e.key==='ArrowRight')keys.right=false;});
+function bindBtn(sel,key){const b=document.querySelector(sel);if(!b)return;b.addEventListener('touchstart',e=>{e.preventDefault();keys[key]=true},{passive:false});b.addEventListener('touchend',e=>{e.preventDefault();keys[key]=false},{passive:false});b.addEventListener('mousedown',()=>keys[key]=true);b.addEventListener('mouseup',()=>keys[key]=false);b.addEventListener('mouseleave',()=>keys[key]=false);}
+bindBtn('.up','up');bindBtn('.down','down');bindBtn('.left','left');bindBtn('.right','right');
+document.getElementById('interact-btn').addEventListener('click',interact);
+document.getElementById('phone-btn').onclick=()=>window.location.href='phone.html';
+</script>
+</body>
+</html>

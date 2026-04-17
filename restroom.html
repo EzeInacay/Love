@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Restroom</title>
+<style>
+* { box-sizing:border-box; }
+body { margin:0; background:#111; display:flex; justify-content:center; align-items:center; height:100vh; overflow:hidden; font-family:monospace; }
+.game { width:360px; height:640px; overflow:hidden; position:relative; background:#000; image-rendering:pixelated; }
+
+/* Small restroom world */
+.world { width:360px; height:380px; position:absolute; background:#1a2028; image-rendering:pixelated; }
+
+/* FLOOR — white tile */
+.floor {
+  position:absolute; inset:40px 0 0 0;
+  background:
+    repeating-linear-gradient(90deg,rgba(0,0,0,0.12) 0px,rgba(0,0,0,0.12) 1px,transparent 1px,transparent 24px),
+    repeating-linear-gradient(0deg,rgba(0,0,0,0.12) 0px,rgba(0,0,0,0.12) 1px,transparent 1px,transparent 24px),
+    #c8cec8;
+}
+/* WALLS */
+.wall-top { position:absolute; top:0;left:0;right:0;height:40px; background:repeating-linear-gradient(90deg,#8a9eaa 0px,#8a9eaa 3px,#7a8e9a 3px,#7a8e9a 16px); border-bottom:3px solid #3a4a54; }
+.wall-left { position:absolute; top:0;left:0;width:8px;height:100%; background:#5a6a74; border-right:2px solid #3a4a54; }
+.wall-right { position:absolute; top:0;right:0;width:8px;height:100%; background:#5a6a74; border-left:2px solid #3a4a54; }
+.wall-bottom { position:absolute; bottom:0;left:0;right:0;height:8px; background:#5a6a74; border-top:2px solid #3a4a54; }
+
+/* TILE ACCENT strips on walls */
+.tile-strip { position:absolute; left:8px;right:8px; height:14px; background:repeating-linear-gradient(90deg,#7ab8cc 0px,#7ab8cc 24px,#5aa0b8 24px,#5aa0b8 26px); }
+
+.object { position:absolute; image-rendering:pixelated; }
+
+/* TOILET */
+.toilet {
+  width:32px; height:48px;
+  background:#e8ece8;
+  border:2px solid #aaa;
+  border-radius:4px 4px 2px 2px;
+}
+.toilet::before { /* tank */
+  content:''; position:absolute;
+  top:-20px; left:-2px; width:36px; height:22px;
+  background:#e0e4e0;
+  border:2px solid #aaa;
+  border-radius:3px 3px 0 0;
+}
+.toilet::after { /* seat */
+  content:''; position:absolute;
+  top:0; left:2px; width:28px; height:36px;
+  background:#d8dcd8;
+  border:2px solid #bbb;
+  border-radius:50% 50% 40% 40%;
+}
+
+/* SHOWER */
+.shower {
+  width:80px; height:80px;
+  background:#c0d4dc;
+  border:3px solid #8a9eaa;
+}
+.shower::before { /* curtain rail */
+  content:''; position:absolute;
+  top:-6px; left:-3px; right:-3px; height:6px;
+  background:#8a8a9a;
+  border-radius:3px 3px 0 0;
+}
+.shower::after { /* drain */
+  content:''; position:absolute;
+  bottom:8px; left:50%; transform:translateX(-50%);
+  width:12px; height:12px;
+  background:#9aacb4;
+  border-radius:50%;
+  border:2px solid #7a8e96;
+}
+
+/* SHOWER HEAD */
+.shower-head {
+  width:10px; height:20px;
+  background:#9a9aaa;
+  border:1px solid #6a6a7a;
+}
+.shower-head::after {
+  content:''; position:absolute;
+  bottom:-6px; left:-4px; width:18px; height:6px;
+  background:#8a8a9a;
+  border-radius:0 0 4px 4px;
+  border:1px solid #6a6a7a;
+}
+
+/* SINK */
+.sink {
+  width:36px; height:28px;
+  background:#d8dcd8;
+  border:2px solid #aaa;
+  border-radius:4px;
+}
+.sink::before { /* faucet */
+  content:''; position:absolute;
+  top:-12px; left:13px; width:8px; height:14px;
+  background:#9a9aaa;
+  border:1px solid #6a6a7a;
+  border-radius:2px;
+}
+.sink::after { /* drain */
+  content:''; position:absolute;
+  bottom:4px; left:50%; transform:translateX(-50%);
+  width:8px; height:4px;
+  background:#bbb;
+  border-radius:2px;
+}
+
+/* MIRROR ABOVE SINK */
+.mirror {
+  width:40px; height:36px;
+  background:linear-gradient(135deg,#c8e8ff 0%,#e8f8ff 40%,#a0c8e0 70%,#c8e8ff 100%);
+  border:3px solid #8a9eaa;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.5),2px 2px 4px rgba(0,0,0,.3);
+}
+
+/* TOWEL RACK */
+.towel-rack {
+  width:44px; height:8px;
+  background:#8a8a9a;
+  border:2px solid #5a5a6a;
+  border-radius:2px;
+}
+.towel-rack::after {
+  content:''; position:absolute;
+  top:6px; left:4px; width:36px; height:18px;
+  background:#e8b0a0;
+  border:1px solid #c09080;
+  border-radius:0 0 3px 3px;
+}
+
+/* DOOR */
+.door { width:36px; height:60px; background:#7a5a2a; border:2px solid #3a2a0a; border-bottom:none; }
+.door::before { content:''; position:absolute; inset:-3px -3px 0; border:3px solid #5a3a0a; border-bottom:none; pointer-events:none; }
+.door::after { content:''; position:absolute; width:6px; height:6px; background:#d4aa40; border-radius:50%; left:4px; top:30px; }
+
+/* HEART */
+.heart { position:absolute; width:0; height:0; z-index:50; }
+.heart::before {
+  content:''; position:absolute; width:4px; height:4px; background:#ff2a2a;
+  box-shadow:
+    4px 0 #ff2a2a,8px 0 #ff2a2a,16px 0 #ff2a2a,20px 0 #ff2a2a,
+    0 4px #ff2a2a,4px 4px #ff4444,8px 4px #ff4444,12px 4px #ff2a2a,16px 4px #ff4444,20px 4px #ff4444,24px 4px #ff2a2a,
+    0 8px #ff2a2a,4px 8px #ff4444,8px 8px #ff6666,12px 8px #ff4444,16px 8px #ff6666,20px 8px #ff4444,24px 8px #ff2a2a,
+    4px 12px #ff2a2a,8px 12px #ff4444,12px 12px #ff4444,16px 12px #ff4444,20px 12px #ff2a2a,
+    8px 16px #ff2a2a,12px 16px #ff4444,16px 16px #ff2a2a,
+    12px 20px #cc1a1a;
+}
+
+/* LIGHTING — cooler tint for bathroom */
+.darkness { position:absolute; inset:0; pointer-events:none; z-index:40; background:rgba(0,10,20,0.60); }
+.spotlight { position:absolute; pointer-events:none; z-index:41; width:180px; height:180px; border-radius:50%; background:radial-gradient(circle,rgba(200,230,255,0.30) 0%,rgba(150,200,255,0.12) 40%,transparent 70%); mix-blend-mode:screen; }
+
+/* DIALOG */
+.dialog { position:absolute; bottom:160px; left:10px; right:10px; background:rgba(0,0,0,0.93); color:#fff; border:2px solid #7ab8cc; padding:10px 12px; display:none; z-index:100; font-size:13px; line-height:1.5; border-radius:4px; font-family:monospace; }
+.dialog button { margin:6px 4px 0 0; padding:4px 10px; background:#1a2a34; color:#fff; border:1px solid #7ab8cc; cursor:pointer; font-family:monospace; font-size:12px; border-radius:2px; }
+.dialog button:hover { background:#2a3a44; }
+.hint { position:absolute; background:rgba(0,0,0,0.8); color:#7adcfc; font-size:10px; padding:2px 5px; border-radius:2px; white-space:nowrap; pointer-events:none; z-index:60; display:none; font-family:monospace; }
+#phone-btn { position:absolute; top:10px; right:10px; width:40px; height:40px; border-radius:8px; background:#1a2028; color:white; border:1px solid #7ab8cc; font-size:18px; z-index:200; cursor:pointer; }
+.controls { position:absolute; bottom:20px; left:16px; display:grid; grid-template-columns:44px 44px 44px; grid-template-rows:44px 44px; gap:5px; z-index:150; }
+.btn { background:rgba(20,30,40,0.85); color:#aaccd8; border:1px solid #4a6a7a; border-radius:8px; font-size:16px; display:flex; align-items:center; justify-content:center; cursor:pointer; user-select:none; touch-action:none; }
+.btn:active { background:rgba(50,80,100,0.9); }
+.up{grid-column:2;grid-row:1;}.left{grid-column:1;grid-row:2;}.down{grid-column:2;grid-row:2;}.right{grid-column:3;grid-row:2;}
+.interact { position:absolute; bottom:24px; right:20px; width:64px; height:64px; background:rgba(20,30,40,0.9); border-radius:50%; border:2px solid #5a8a9a; z-index:150; cursor:pointer; display:flex; align-items:center; justify-content:center; color:#7adcfc; font-size:11px; font-family:monospace; user-select:none; }
+.interact:active { background:rgba(50,80,100,0.9); }
+</style>
+</head>
+<body>
+<div class="game" id="game">
+  <div class="world" id="world">
+    <div class="floor"></div>
+    <div class="wall-top"></div>
+    <div class="wall-left"></div>
+    <div class="wall-right"></div>
+    <div class="wall-bottom"></div>
+    <!-- tile accent -->
+    <div class="tile-strip" style="top:44px;"></div>
+
+    <!-- SHOWER top-right -->
+    <div class="object shower" style="top:50px;left:262px;" data-text="A shower. The water pressure is perfect."></div>
+    <div class="object shower-head" style="top:52px;left:318px;" data-text="The shower head. Looks clean."></div>
+
+    <!-- TOILET top-left area -->
+    <div class="object toilet" style="top:70px;left:20px;" data-text="The toilet. It flushes quietly."></div>
+
+    <!-- SINK center-left -->
+    <div class="object sink" style="top:200px;left:18px;" data-text="A porcelain sink. Cold water is refreshing."></div>
+
+    <!-- MIRROR above sink -->
+    <div class="object mirror" style="top:158px;left:15px;" data-text="You check yourself in the bathroom mirror. Looking alive."></div>
+
+    <!-- TOWEL RACK -->
+    <div class="object towel-rack" style="top:240px;left:90px;" data-text="A towel rack. The towel is soft and warm."></div>
+
+    <!-- DOOR back to living room -->
+    <div class="object door" style="top:295px;left:155px;" id="door-obj" data-text="Back to the living room."></div>
+
+    <div class="darkness"></div>
+    <div class="spotlight" id="spotlight"></div>
+    <div class="heart" id="heart"></div>
+    <div class="hint" id="hint">Press ● to interact</div>
+  </div>
+
+  <div class="dialog" id="dialog"></div>
+  <button id="phone-btn">📱</button>
+  <div class="controls">
+    <button class="btn up">↑</button>
+    <button class="btn left">←</button>
+    <button class="btn down">↓</button>
+    <button class="btn right">→</button>
+  </div>
+  <button class="interact" id="interact-btn">●</button>
+</div>
+<script>
+const heart=document.getElementById('heart'),world=document.getElementById('world'),game=document.getElementById('game'),dialog=document.getElementById('dialog'),spotlight=document.getElementById('spotlight'),hint=document.getElementById('hint');
+const WORLD_W=360,WORLD_H=380,GAME_W=360,GAME_H=640,PW=28,PH=24,SPEED=2.5;
+let px=150,py=290,dialogOpen=false;
+let keys={up:false,down:false,left:false,right:false};
+
+const collidables=[
+  [0,0,WORLD_W,8],[0,0,8,WORLD_H],[WORLD_W-8,0,8,WORLD_H],[0,WORLD_H-8,WORLD_W,8],
+  [0,40,WORLD_W,8],
+  [20,70,32,48],   // toilet
+  [18,200,36,28],  // sink
+  [262,50,80,80],  // shower
+];
+function isColliding(nx,ny){for(const[cx,cy,cw,ch]of collidables){if(nx<cx+cw&&nx+PW>cx&&ny<cy+ch&&ny+PH>cy)return true;}return false;}
+
+const allObjs=document.querySelectorAll('[data-text]');
+function getNearby(){
+  for(const obj of allObjs){
+    const ox=parseInt(obj.style.left)||0,oy=parseInt(obj.style.top)||0;
+    const ow=obj.offsetWidth||40,oh=obj.offsetHeight||40;
+    const dx=Math.abs(px+PW/2-(ox+ow/2)),dy=Math.abs(py+PH/2-(oy+oh/2));
+    if(dx<ow/2+PW/2+20&&dy<oh/2+PH/2+20)return obj;
+  }return null;
+}
+function interact(){
+  if(dialogOpen){closeDialog();return;}
+  const obj=getNearby();if(!obj)return;
+  const text=obj.dataset.text;
+  if(obj.id==='door-obj'){
+    showDialog(`${text}<br><br><button onclick="window.location.href='livingroom.html'">Go Back</button><button onclick="closeDialog()">Stay</button>`);
+  }else showDialog(text+'<br><br><button onclick="closeDialog()">OK</button>');
+}
+function showDialog(h){dialog.innerHTML=h;dialog.style.display='block';dialogOpen=true;}
+function closeDialog(){dialog.style.display='none';dialogOpen=false;}
+window.closeDialog=closeDialog;
+
+function update(){
+  if(!dialogOpen){
+    let nx=px,ny=py;
+    if(keys.up)ny-=SPEED;if(keys.down)ny+=SPEED;if(keys.left)nx-=SPEED;if(keys.right)nx+=SPEED;
+    if(!isColliding(nx,py))px=nx;if(!isColliding(px,ny))py=ny;
+    px=Math.max(8,Math.min(WORLD_W-PW-8,px));py=Math.max(48,Math.min(WORLD_H-PH-8,py));
+  }
+  heart.style.left=px+'px';heart.style.top=py+'px';
+  spotlight.style.left=(px-76)+'px';spotlight.style.top=(py-76)+'px';
+  // Room fits in camera — no scrolling needed
+  world.style.left='0px';world.style.top='130px';
+  const near=getNearby();
+  if(near){hint.style.display='block';hint.style.left=(parseInt(near.style.left)+near.offsetWidth/2-40)+'px';hint.style.top=(parseInt(near.style.top)+130-18)+'px';}
+  else hint.style.display='none';
+  requestAnimationFrame(update);
+}
+update();
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowUp'){keys.up=true;e.preventDefault();}if(e.key==='ArrowDown'){keys.down=true;e.preventDefault();}
+  if(e.key==='ArrowLeft'){keys.left=true;e.preventDefault();}if(e.key==='ArrowRight'){keys.right=true;e.preventDefault();}
+  if(e.key==='e'||e.key==='Enter')interact();
+});
+document.addEventListener('keyup',e=>{
+  if(e.key==='ArrowUp')keys.up=false;if(e.key==='ArrowDown')keys.down=false;
+  if(e.key==='ArrowLeft')keys.left=false;if(e.key==='ArrowRight')keys.right=false;
+});
+function bindBtn(sel,key){const b=document.querySelector(sel);if(!b)return;b.addEventListener('touchstart',e=>{e.preventDefault();keys[key]=true},{passive:false});b.addEventListener('touchend',e=>{e.preventDefault();keys[key]=false},{passive:false});b.addEventListener('mousedown',()=>keys[key]=true);b.addEventListener('mouseup',()=>keys[key]=false);b.addEventListener('mouseleave',()=>keys[key]=false);}
+bindBtn('.up','up');bindBtn('.down','down');bindBtn('.left','left');bindBtn('.right','right');
+document.getElementById('interact-btn').addEventListener('click',interact);
+document.getElementById('phone-btn').onclick=()=>window.location.href='phone.html';
+</script>
+</body>
+</html>

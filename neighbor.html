@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Neighbor's Room</title>
+<style>
+* { box-sizing: border-box; }
+body { margin:0; background:#111; display:flex; justify-content:center; align-items:center; height:100vh; overflow:hidden; font-family:monospace; }
+.game { width:360px; height:640px; overflow:hidden; position:relative; background:#000; image-rendering:pixelated; }
+.world { width:520px; height:560px; position:absolute; background:#3c2030; image-rendering:pixelated; }
+
+/* FLOOR — pink tint */
+.floor {
+  position:absolute; inset:40px 0 0 0;
+  background:
+    repeating-linear-gradient(90deg,rgba(0,0,0,0.06) 0px,rgba(0,0,0,0.06) 1px,transparent 1px,transparent 32px),
+    repeating-linear-gradient(0deg,rgba(0,0,0,0.06) 0px,rgba(0,0,0,0.06) 1px,transparent 1px,transparent 32px),
+    #4a2c38;
+  pointer-events:none;
+}
+/* WALLS */
+.wall-top { position:absolute; top:0;left:0;right:0;height:40px; background:repeating-linear-gradient(90deg,#6a3a4e 0px,#6a3a4e 3px,#5a2a3e 3px,#5a2a3e 16px); border-bottom:3px solid #3a0a1e; }
+.wall-left { position:absolute; top:0;left:0;width:8px;height:100%; background:#4a1a2e; border-right:2px solid #3a0a1e; }
+.wall-right { position:absolute; top:0;right:0;width:8px;height:100%; background:#4a1a2e; border-left:2px solid #3a0a1e; }
+.wall-bottom { position:absolute; bottom:0;left:0;right:0;height:8px; background:#4a1a2e; border-top:2px solid #3a0a1e; }
+
+/* HEART */
+.heart { position:absolute; width:0; height:0; z-index:50; }
+.heart::before {
+  content:''; position:absolute; width:4px; height:4px; background:#ff2a2a;
+  box-shadow:
+    4px 0 #ff2a2a,8px 0 #ff2a2a,16px 0 #ff2a2a,20px 0 #ff2a2a,
+    0 4px #ff2a2a,4px 4px #ff4444,8px 4px #ff4444,12px 4px #ff2a2a,16px 4px #ff4444,20px 4px #ff4444,24px 4px #ff2a2a,
+    0 8px #ff2a2a,4px 8px #ff4444,8px 8px #ff6666,12px 8px #ff4444,16px 8px #ff6666,20px 8px #ff4444,24px 8px #ff2a2a,
+    4px 12px #ff2a2a,8px 12px #ff4444,12px 12px #ff4444,16px 12px #ff4444,20px 12px #ff2a2a,
+    8px 16px #ff2a2a,12px 16px #ff4444,16px 16px #ff2a2a,
+    12px 20px #cc1a1a;
+}
+.object { position:absolute; image-rendering:pixelated; }
+
+/* BED — pink */
+.bed { width:96px; height:56px; background:#1a1a1a; }
+.bed::before {
+  content:''; position:absolute; inset:0;
+  background: linear-gradient(#6a2040 0px,#6a2040 56px) 0 0/16px 100% no-repeat,
+              linear-gradient(#d080a0 0px,#d080a0 56px) 16px 0/80px 100% no-repeat;
+  border:2px solid #3a0a1e;
+}
+.bed::after {
+  content:''; position:absolute; left:20px; top:4px; width:22px; height:20px;
+  background:#f8d8e8; border:1px solid #d0a0b8;
+  box-shadow:28px 4px 0 4px #e080b0,28px 4px 0 6px #c050a0;
+}
+
+/* TABLE — pink tint */
+.table { width:36px; height:80px; background:#1a1a1a; }
+.table::before { content:''; position:absolute; inset:0; background:#8a4060; border:2px solid #3a0a1e; box-shadow:inset 1px 1px 0 #b06080; }
+.table::after { content:'💻'; position:absolute; top:8px; left:4px; font-size:20px; image-rendering:auto; }
+
+/* DRAWER */
+.drawer { width:40px; height:36px; background:#8a2a50; border:2px solid #3a0a1e; box-shadow:inset 1px 1px 0 #c050a0; }
+.drawer::after { content:''; position:absolute; width:8px; height:4px; background:#f8c0d8; border:1px solid #c090b0; top:14px; left:14px; }
+
+/* CABINET */
+.cabinet { width:36px; height:52px; background:#8a2a50; border:2px solid #3a0a1e; box-shadow:inset 1px 1px 0 #c050a0; }
+.cabinet::after { content:''; position:absolute; width:6px; height:6px; background:#f8c0d8; border-radius:50%; border:1px solid #c090b0; top:22px; left:14px; }
+
+/* CARPET — pink/magenta */
+.carpet { width:140px; height:80px; border-radius:4px; background:repeating-linear-gradient(45deg,#6a1a4a 0px,#6a1a4a 4px,#8a2a6e 4px,#8a2a6e 8px); border:3px solid #c050a0; opacity:.85; }
+
+/* DOOR */
+.door { width:36px; height:60px; background:#9a4060; border:2px solid #5a1030; border-bottom:none; }
+.door::before { content:''; position:absolute; inset:-3px -3px 0; border:3px solid #7a2040; border-bottom:none; pointer-events:none; }
+.door::after { content:''; position:absolute; width:6px; height:6px; background:#f8d0e0; border-radius:50%; left:4px; top:30px; }
+
+/* GYM — kept but pink tint */
+.barbell { width:100px; height:28px; background:#1a1a1a; }
+.barbell::before { content:''; position:absolute; left:10px; top:8px; width:80px; height:12px; background:#b08090; border:2px solid #604050; border-radius:2px; }
+.barbell::after { content:''; position:absolute; width:12px; height:24px; background:#806070; border:2px solid #604050; top:2px; left:4px; box-shadow:84px 0 0 0 #806070,82px 0 0 2px #604050; }
+.bench { width:80px; height:28px; background:#1a1a1a; }
+.bench::before { content:''; position:absolute; left:8px; top:4px; width:64px; height:12px; background:#c080a0; border:2px solid #6a2040; border-radius:2px; }
+
+/* MIRROR */
+.mirror { width:28px; height:48px; background:linear-gradient(135deg,#ffd0e8 0%,#ffe8f4 40%,#f0c0d8 70%,#ffd0e8 100%); border:3px solid #c080a0; box-shadow:inset 0 0 0 1px rgba(255,255,255,.5),2px 2px 4px rgba(0,0,0,.5); }
+
+/* CHAIR */
+.chair { width:28px; height:28px; background:#a04060; border:2px solid #5a1030; border-radius:2px; }
+.chair::after { content:''; position:absolute; top:-14px; left:2px; width:24px; height:14px; background:#a04060; border:2px solid #5a1030; border-bottom:none; border-radius:2px 2px 0 0; }
+
+/* PICTURE FRAMES */
+.picture { background:#3a0a1e; border:3px solid #f090c0; }
+.picture::before { content:'🖼️'; position:absolute; inset:2px; display:flex; align-items:center; justify-content:center; font-size:14px; image-rendering:auto; }
+
+/* DOOR DRAWER */
+.door-drawer { width:32px; height:36px; background:#7a2040; border:2px solid #3a0a1e; }
+.door-drawer::after { content:''; position:absolute; width:6px; height:4px; background:#f8c0d8; border:1px solid #c090b0; top:15px; left:12px; }
+
+/* TRASH */
+.trash { width:20px; height:24px; background:#6a2a3a; border:2px solid #3a0a1e; border-radius:0 0 3px 3px; border-top:none; }
+.trash::before { content:''; position:absolute; top:-5px; left:-2px; right:-2px; height:5px; background:#7a3a4a; border:2px solid #3a0a1e; border-radius:2px 2px 0 0; }
+
+/* PLUSHIES unique to neighbor — cute touch */
+.plushie { font-size:24px; line-height:1; display:flex; align-items:center; justify-content:center; image-rendering:auto; }
+
+/* LIGHTING */
+.darkness { position:absolute; inset:0; pointer-events:none; z-index:40; background:rgba(0,0,0,0.70); }
+.spotlight { position:absolute; pointer-events:none; z-index:41; width:200px; height:200px; border-radius:50%; background:radial-gradient(circle,rgba(255,200,220,0.28) 0%,rgba(255,150,180,0.12) 40%,transparent 70%); mix-blend-mode:screen; }
+
+/* DIALOG */
+.dialog { position:absolute; bottom:180px; left:10px; right:10px; background:rgba(20,0,10,0.93); color:#fff; border:2px solid #c050a0; padding:10px 12px; display:none; z-index:100; font-size:13px; line-height:1.5; border-radius:4px; font-family:monospace; }
+.dialog button { margin:6px 4px 0 0; padding:4px 10px; background:#4a1030; color:#fff; border:1px solid #c050a0; cursor:pointer; font-family:monospace; font-size:12px; border-radius:2px; }
+.dialog button:hover { background:#6a2050; }
+
+/* HINT */
+.hint { position:absolute; background:rgba(20,0,10,0.85); color:#f090c0; font-size:10px; padding:2px 5px; border-radius:2px; white-space:nowrap; transform:translate(-50%,-20px); pointer-events:none; z-index:60; display:none; font-family:monospace; }
+
+/* PHONE BTN */
+#phone-btn { position:absolute; top:10px; right:10px; width:40px; height:40px; border-radius:8px; background:#2a0a1a; color:white; border:1px solid #c050a0; font-size:18px; z-index:200; cursor:pointer; }
+
+/* CONTROLS */
+.controls { position:absolute; bottom:20px; left:16px; display:grid; grid-template-columns:44px 44px 44px; grid-template-rows:44px 44px; gap:5px; z-index:150; }
+.btn { background:rgba(40,10,25,0.85); color:#eeb0d0; border:1px solid #c050a0; border-radius:8px; font-size:16px; display:flex; align-items:center; justify-content:center; cursor:pointer; user-select:none; touch-action:none; }
+.btn:active { background:rgba(100,20,60,0.9); }
+.up { grid-column:2; grid-row:1; } .left { grid-column:1; grid-row:2; } .down { grid-column:2; grid-row:2; } .right { grid-column:3; grid-row:2; }
+.interact { position:absolute; bottom:24px; right:20px; width:64px; height:64px; background:rgba(40,10,25,0.9); border-radius:50%; border:2px solid #c050a0; z-index:150; cursor:pointer; display:flex; align-items:center; justify-content:center; color:#f090c0; font-size:11px; font-family:monospace; user-select:none; }
+.interact:active { background:rgba(100,20,60,0.9); }
+
+/* ROOM LABEL */
+.room-sign { position:absolute; top:46px; left:50%; transform:translateX(-50%); background:rgba(100,10,50,0.6); color:#f090c0; font-size:9px; padding:2px 6px; border-radius:2px; font-family:monospace; pointer-events:none; z-index:5; white-space:nowrap; border:1px solid #c050a0; }
+</style>
+</head>
+<body>
+<div class="game" id="game">
+  <div class="world" id="world">
+    <div class="floor"></div>
+    <div class="wall-top"></div>
+    <div class="wall-left"></div>
+    <div class="wall-right"></div>
+    <div class="wall-bottom"></div>
+    <div class="room-sign">✿ Neighbor's Room ✿</div>
+
+    <!-- BED top-left -->
+    <div class="object bed" style="top:50px;left:10px;" data-text="A pink bed. It smells like strawberries."></div>
+
+    <!-- TABLE vertical left wall -->
+    <div class="object table" style="top:120px;left:10px;" data-text="A pink desk. Covered in stickers." id="table-obj"></div>
+
+    <!-- MIRROR left wall below table -->
+    <div class="object mirror" style="top:216px;left:10px;" data-text="...You look at yourself in the neighbor's mirror. Awkward."></div>
+
+    <!-- DRAWER foot of bed -->
+    <div class="object drawer" style="top:50px;left:115px;" data-text="A frilly drawer. You shouldn't be in here."></div>
+
+    <!-- CABINET next to drawer -->
+    <div class="object cabinet" style="top:50px;left:162px;" data-text="A pink cabinet. Full of things you don't recognize."></div>
+
+    <!-- PLUSHIE on cabinet -->
+    <div class="object plushie" style="top:32px;left:162px;width:36px;height:20px;" data-text="A cute plushie sitting on the cabinet. It stares at you.">🧸</div>
+
+    <!-- PICTURE FRAME 1 -->
+    <div class="object picture" style="top:50px;left:290px;width:32px;height:40px;" data-text="A photo of someone smiling. You don't recognize them."></div>
+
+    <!-- PICTURE FRAME 2 -->
+    <div class="object picture" style="top:50px;left:334px;width:24px;height:32px;" data-text="A cute illustration pinned to the wall."></div>
+
+    <!-- CHAIR -->
+    <div class="object chair" style="top:160px;left:58px;" data-text="A pink chair with a heart cushion."></div>
+
+    <!-- CARPET center, walkable -->
+    <div class="object carpet" style="top:210px;left:170px;" data-text="A fluffy pink carpet." data-collidable="false"></div>
+
+    <!-- DOOR center-right -->
+    <div class="object door" style="top:200px;left:476px;" id="door-obj" data-text="Back to the hallway."></div>
+
+    <!-- DOOR DRAWER near door -->
+    <div class="object door-drawer" style="top:200px;left:434px;" data-text="A little drawer by the door. Not your stuff."></div>
+
+    <!-- TRASH -->
+    <div class="object trash" style="top:270px;left:466px;" data-text="A trash can with a pink bag. Polite."></div>
+
+    <!-- BARBELLS -->
+    <div class="object barbell" style="top:460px;left:140px;" data-text="Pink dumbbells. Lighter than they look."></div>
+
+    <!-- BENCH -->
+    <div class="object bench" style="top:460px;left:270px;" data-text="A workout bench with a pink towel on it."></div>
+
+    <!-- VANITY / extra dresser -->
+    <div class="object" style="top:380px;left:380px;width:60px;height:40px;background:#8a2a50;border:2px solid #3a0a1e;box-shadow:inset 1px 1px 0 #c050a0;" data-text="A vanity table. Covered in makeup and perfume."></div>
+
+    <!-- STRING LIGHTS along top wall -->
+    <div class="object" style="top:42px;left:20px;right:20px;height:4px;width:480px;background:linear-gradient(90deg,#ff80c0,#ffb0d8,#ff60a8,#ffc0e0,#ff80c0);opacity:0.6;" data-text="Fairy lights strung across the wall. Very cozy." data-collidable="false"></div>
+
+    <div class="darkness"></div>
+    <div class="spotlight" id="spotlight"></div>
+    <div class="heart" id="heart"></div>
+    <div class="hint" id="hint">Press ● to interact</div>
+  </div>
+
+  <div class="dialog" id="dialog"></div>
+  <button id="phone-btn">📱</button>
+  <div class="controls">
+    <button class="btn up">↑</button>
+    <button class="btn left">←</button>
+    <button class="btn down">↓</button>
+    <button class="btn right">→</button>
+  </div>
+  <button class="interact" id="interact-btn">●</button>
+</div>
+<script>
+const heart=document.getElementById('heart'),world=document.getElementById('world'),game=document.getElementById('game'),dialog=document.getElementById('dialog'),spotlight=document.getElementById('spotlight'),hint=document.getElementById('hint');
+const WORLD_W=520,WORLD_H=560,GAME_W=360,GAME_H=640,PW=28,PH=24,SPEED=2.5;
+let px=280,py=280,dialogOpen=false;
+let keys={up:false,down:false,left:false,right:false};
+
+const collidables=[
+  [0,0,WORLD_W,8],[0,0,8,WORLD_H],[WORLD_W-8,0,8,WORLD_H],[0,WORLD_H-8,WORLD_W,8],
+  [0,40,WORLD_W,8],
+  [10,50,96,56],[10,120,36,80],[10,216,28,48],[115,50,40,36],[162,50,36,72],
+  [290,50,32,40],[334,50,24,32],[58,160,28,42],[434,200,32,36],[466,270,20,24],
+  [140,460,100,28],[270,460,80,28],[380,380,60,40],
+];
+function isColliding(nx,ny){for(const[cx,cy,cw,ch]of collidables){if(nx<cx+cw&&nx+PW>cx&&ny<cy+ch&&ny+PH>cy)return true;}return false;}
+
+const objects=document.querySelectorAll('.object,[data-text]');
+function getNearby(){
+  for(const obj of objects){
+    if(!obj.dataset.text)continue;
+    const ox=parseInt(obj.style.left)||0,oy=parseInt(obj.style.top)||0;
+    const ow=obj.offsetWidth||40,oh=obj.offsetHeight||40;
+    const iw=ow+32,ih=oh+32;
+    const dx=Math.abs(px+PW/2-(ox+ow/2)),dy=Math.abs(py+PH/2-(oy+oh/2));
+    if(dx<iw/2+PW/2&&dy<ih/2+PH/2)return obj;
+  }
+  return null;
+}
+
+function interact(){
+  if(dialogOpen){closeDialog();return;}
+  const obj=getNearby();if(!obj)return;
+  const text=obj.dataset.text||'...';
+  if(obj.id==='door-obj'){
+    showDialog(`${text}<br><br><button onclick="window.location.href='hallway.html'">Leave</button><button onclick="closeDialog()">Stay</button>`);
+  }else if(obj.id==='table-obj'){
+    showDialog(`${text}<br><br><button onclick="closeDialog()">OK</button>`);
+  }else{
+    showDialog(text+'<br><br><button onclick="closeDialog()">OK</button>');
+  }
+}
+function showDialog(h){dialog.innerHTML=h;dialog.style.display='block';dialogOpen=true;}
+function closeDialog(){dialog.style.display='none';dialogOpen=false;}
+window.closeDialog=closeDialog;
+
+function update(){
+  if(!dialogOpen){
+    let nx=px,ny=py;
+    if(keys.up)ny-=SPEED;if(keys.down)ny+=SPEED;if(keys.left)nx-=SPEED;if(keys.right)nx+=SPEED;
+    if(!isColliding(nx,py))px=nx;if(!isColliding(px,ny))py=ny;
+    px=Math.max(8,Math.min(WORLD_W-PW-8,px));py=Math.max(48,Math.min(WORLD_H-PH-8,py));
+  }
+  heart.style.left=px+'px';heart.style.top=py+'px';
+  spotlight.style.left=(px-86)+'px';spotlight.style.top=(py-86)+'px';
+  let camX=px-GAME_W/2+PW/2,camY=py-GAME_H/2+PH/2;
+  camX=Math.max(0,Math.min(WORLD_W-GAME_W,camX));camY=Math.max(0,Math.min(WORLD_H-GAME_H,camY));
+  world.style.transform=`translate(${-camX}px,${-camY}px)`;
+  const near=getNearby();
+  if(near){
+    const ox=parseInt(near.style.left)||0,ow=near.offsetWidth||40,oy=parseInt(near.style.top)||0;
+    hint.style.display='block';hint.style.left=(ox-camX+ow/2)+'px';hint.style.top=(oy-camY-18)+'px';
+  }else hint.style.display='none';
+  requestAnimationFrame(update);
+}
+update();
+
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowUp'){keys.up=true;e.preventDefault();}
+  if(e.key==='ArrowDown'){keys.down=true;e.preventDefault();}
+  if(e.key==='ArrowLeft'){keys.left=true;e.preventDefault();}
+  if(e.key==='ArrowRight'){keys.right=true;e.preventDefault();}
+  if(e.key==='e'||e.key==='Enter')interact();
+});
+document.addEventListener('keyup',e=>{
+  if(e.key==='ArrowUp')keys.up=false;if(e.key==='ArrowDown')keys.down=false;
+  if(e.key==='ArrowLeft')keys.left=false;if(e.key==='ArrowRight')keys.right=false;
+});
+function bindBtn(sel,key){
+  const b=document.querySelector(sel);if(!b)return;
+  b.addEventListener('touchstart',e=>{e.preventDefault();keys[key]=true},{passive:false});
+  b.addEventListener('touchend',e=>{e.preventDefault();keys[key]=false},{passive:false});
+  b.addEventListener('mousedown',()=>keys[key]=true);
+  b.addEventListener('mouseup',()=>keys[key]=false);
+  b.addEventListener('mouseleave',()=>keys[key]=false);
+}
+bindBtn('.up','up');bindBtn('.down','down');bindBtn('.left','left');bindBtn('.right','right');
+document.getElementById('interact-btn').addEventListener('click',interact);
+document.getElementById('phone-btn').onclick=()=>window.location.href='phone.html';
+</script>
+</body>
+</html>

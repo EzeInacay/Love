@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>The Doll</title>
+<style>
+* { box-sizing:border-box; margin:0; padding:0; }
+body {
+  background:#000;
+  display:flex; justify-content:center; align-items:center;
+  height:100vh; overflow:hidden;
+  font-family:monospace;
+}
+.game {
+  width:360px; height:640px;
+  position:relative; overflow:hidden;
+  background:#0a0808;
+  image-rendering:pixelated;
+}
+
+/* ── BACKGROUND SCENE ── */
+.scene {
+  position:absolute; inset:0;
+  background:
+    radial-gradient(ellipse 60% 40% at 50% 80%, #1a1010 0%, #0a0808 100%);
+}
+/* BOXES texture */
+.scene::before {
+  content:''; position:absolute;
+  bottom:0; left:0; right:0; height:280px;
+  background:
+    linear-gradient(#2a1e12 0px,#2a1e12 90px,#221608 90px,#221608 180px,#1a1008 180px,#1a1008 270px,#131008 270px,#131008 280px);
+  border-top:3px solid #3a2a1a;
+}
+/* BOX lines */
+.scene::after {
+  content:''; position:absolute;
+  bottom:0; left:0; right:0; height:280px;
+  background:
+    repeating-linear-gradient(90deg,transparent 0px,transparent 118px,rgba(0,0,0,0.4) 118px,rgba(0,0,0,0.4) 120px,transparent 120px,transparent 238px,rgba(0,0,0,0.4) 238px,rgba(0,0,0,0.4) 240px),
+    repeating-linear-gradient(to bottom,transparent 0px,transparent 88px,rgba(0,0,0,0.4) 88px,rgba(0,0,0,0.4) 90px);
+}
+
+/* AMBIENT DUST particles */
+@keyframes float {
+  0%,100%{transform:translateY(0);}
+  50%{transform:translateY(-8px);}
+}
+.dust { position:absolute; width:2px; height:2px; background:rgba(255,220,180,0.15); border-radius:50%; animation:float 3s infinite; }
+
+/* ── DOLL ── */
+.doll {
+  position:absolute;
+  bottom:140px;
+  left:50%;
+  transform:translateX(-50%);
+  width:160px;
+  height:260px;
+}
+
+/* HEAD */
+.doll-head {
+  position:absolute; top:0; left:50%; transform:translateX(-50%);
+  width:90px; height:88px;
+  background:#e8d0b0;
+  border:3px solid #b09070;
+  border-radius:45% 45% 38% 38%;
+  box-shadow:inset -6px -6px 0 rgba(0,0,0,0.08), 0 0 20px rgba(180,100,80,0.2);
+  cursor:pointer;
+  z-index:10;
+}
+/* HAIR */
+.doll-head::before {
+  content:''; position:absolute;
+  top:-16px; left:-4px; right:-4px; height:30px;
+  background:#1a0e06;
+  border-radius:50% 50% 0 0 / 60% 60% 0 0;
+  border:2px solid #0a0600;
+}
+.doll-head::after { /* CHEEKS */
+  content:''; position:absolute;
+  bottom:16px; left:8px; right:8px; height:8px;
+  background:transparent;
+  box-shadow: 6px 0 0 4px rgba(220,100,100,0.4), calc(100% - 18px) 0 0 4px rgba(220,100,100,0.4);
+}
+
+/* EYES zone */
+.doll-eyes {
+  position:absolute;
+  top:26px; left:50%; transform:translateX(-50%);
+  width:64px; height:20px;
+  cursor:pointer;
+  z-index:11;
+}
+.eye {
+  position:absolute;
+  width:18px; height:18px;
+  background:#0a0608;
+  border:2px solid #222;
+  border-radius:50%;
+  top:0;
+  transition:background 0.3s, box-shadow 0.3s;
+}
+.eye.left  { left:4px; }
+.eye.right { right:4px; }
+.eye::after { /* glint */
+  content:''; position:absolute;
+  width:5px; height:5px;
+  background:rgba(255,255,255,0.7);
+  border-radius:50%;
+  top:2px; right:2px;
+}
+/* GLOW state */
+.eye.glow {
+  background:radial-gradient(circle,#ff2020 0%,#880000 60%,#220000 100%);
+  box-shadow:0 0 12px 6px rgba(255,0,0,0.6), 0 0 30px 10px rgba(200,0,0,0.3);
+  animation:eyePulse 1.5s infinite;
+}
+@keyframes eyePulse {
+  0%,100%{box-shadow:0 0 12px 6px rgba(255,0,0,0.6),0 0 30px 10px rgba(200,0,0,0.3);}
+  50%{box-shadow:0 0 20px 10px rgba(255,0,0,0.9),0 0 50px 20px rgba(200,0,0,0.5);}
+}
+
+/* MOUTH */
+.doll-mouth {
+  position:absolute;
+  top:56px; left:50%; transform:translateX(-50%);
+  width:32px; height:10px;
+  cursor:pointer;
+  z-index:11;
+  display:flex; align-items:center; justify-content:center;
+}
+.mouth-shape {
+  width:24px; height:4px;
+  background:#8a3030;
+  border-radius:2px;
+  transition:all 0.2s;
+}
+.mouth-shape.smile {
+  height:6px;
+  border-radius:0 0 12px 12px / 0 0 6px 6px;
+  background:#a04040;
+}
+.mouth-shape.frown {
+  height:6px;
+  border-radius:12px 12px 0 0 / 6px 6px 0 0;
+  background:#703030;
+}
+.mouth-shape.none { background:transparent; }
+
+/* BODY */
+.doll-body {
+  position:absolute; top:82px; left:50%; transform:translateX(-50%);
+  width:70px; height:90px;
+  background:#c03050;
+  border:3px solid #901830;
+  border-radius:4px;
+  cursor:pointer;
+  z-index:10;
+  box-shadow:inset -4px -4px 0 rgba(0,0,0,0.12);
+}
+/* STOMACH area */
+.doll-stomach {
+  position:absolute; top:112px; left:50%; transform:translateX(-50%);
+  width:70px; height:40px;
+  cursor:pointer;
+  z-index:11;
+  /* visible zone over body */
+}
+/* DRESS decoration */
+.doll-body::before {
+  content:''; position:absolute;
+  top:8px; left:8px; right:8px; height:2px;
+  background:rgba(255,255,255,0.3);
+  box-shadow:0 8px 0 rgba(255,255,255,0.2), 0 16px 0 rgba(255,255,255,0.15);
+}
+.doll-body::after { /* bow */
+  content:''; position:absolute;
+  top:-8px; left:50%; transform:translateX(-50%);
+  width:20px; height:10px;
+  background:#ff6080;
+  border:2px solid #c02040;
+  border-radius:50% 0 50% 0;
+  box-shadow:-16px 0 0 -2px #ff6080, -16px 0 0 0px #c02040;
+}
+
+/* ARMS */
+.doll-arm {
+  position:absolute; top:92px;
+  width:18px; height:64px;
+  background:#e8d0b0;
+  border:3px solid #b09070;
+  border-radius:6px;
+  cursor:pointer;
+  z-index:9;
+}
+.doll-arm.left  { left:14px; transform:rotate(12deg); }
+.doll-arm.right { right:14px; transform:rotate(-12deg); }
+/* HAND bump */
+.doll-arm::after {
+  content:''; position:absolute;
+  bottom:-8px; left:50%; transform:translateX(-50%);
+  width:16px; height:16px;
+  background:#e0c8a0;
+  border:2px solid #a09070;
+  border-radius:50%;
+}
+
+/* LEGS */
+.doll-leg {
+  position:absolute; top:168px;
+  width:18px; height:72px;
+  background:#e8d0b0;
+  border:3px solid #b09070;
+  border-radius:6px;
+  cursor:pointer;
+  z-index:9;
+}
+.doll-leg.left  { left:32px; }
+.doll-leg.right { right:32px; }
+/* FOOT bump */
+.doll-leg::after {
+  content:''; position:absolute;
+  bottom:-6px; left:-4px;
+  width:26px; height:12px;
+  background:#3a2010;
+  border:2px solid #1a0800;
+  border-radius:0 0 6px 6px;
+}
+
+/* ── HAND CURSOR ── */
+.cursor {
+  position:absolute;
+  width:24px; height:30px;
+  pointer-events:none;
+  z-index:80;
+  transform:translate(-4px,-4px);
+}
+.cursor::before {
+  content:'☞';
+  position:absolute;
+  font-size:24px;
+  color:#fff;
+  text-shadow:0 0 4px rgba(0,0,0,0.8), 1px 1px 0 #000;
+  line-height:1;
+  image-rendering:auto;
+  filter:drop-shadow(0 1px 2px rgba(0,0,0,0.6));
+}
+
+/* ── FLOATING TEXT (doll replies) ── */
+.float-text {
+  position:absolute;
+  font-family:monospace;
+  font-size:13px;
+  font-weight:bold;
+  color:rgba(255,255,255,0.18);
+  pointer-events:none;
+  z-index:70;
+  white-space:nowrap;
+  animation:floatUp 3s ease-out forwards;
+  letter-spacing:1px;
+  text-shadow:0 0 8px rgba(200,150,150,0.3);
+}
+@keyframes floatUp {
+  0%  { opacity:0; transform:translateY(0); }
+  15% { opacity:1; }
+  80% { opacity:0.18; transform:translateY(-60px); }
+  100%{ opacity:0; transform:translateY(-80px); }
+}
+
+/* ── PLAYER DIALOG BUBBLES (above player/at bottom) ── */
+.player-say {
+  position:absolute;
+  bottom:195px; left:10px; right:10px;
+  background:rgba(0,0,0,0.85);
+  color:#fff;
+  border:1px solid #555;
+  padding:7px 10px;
+  font-size:12px;
+  font-family:monospace;
+  z-index:90;
+  border-radius:3px;
+  display:none;
+  animation:fadeDialog 2s ease-out forwards;
+  text-align:center;
+}
+@keyframes fadeDialog {
+  0%,20%{opacity:1;}
+  80%{opacity:1;}
+  100%{opacity:0;}
+}
+
+/* ── LAUGHTER OVERLAY ── */
+.laugh-overlay {
+  position:absolute; inset:0;
+  pointer-events:none; z-index:75;
+  display:none;
+  overflow:hidden;
+}
+.laugh-text {
+  position:absolute;
+  font-family:monospace;
+  font-size:22px;
+  font-weight:bold;
+  color:rgba(255,255,255,0.09);
+  white-space:nowrap;
+  animation:laughAnim 1.2s linear infinite;
+}
+@keyframes laughAnim {
+  0%{transform:translateX(100%);}
+  100%{transform:translateX(-400%);}
+}
+
+/* ── BACK BUTTON ── */
+#back-btn {
+  position:absolute; top:12px; left:12px;
+  padding:6px 12px;
+  background:rgba(0,0,0,0.7);
+  color:rgba(255,255,255,0.6);
+  border:1px solid rgba(255,255,255,0.2);
+  font-family:monospace; font-size:11px;
+  border-radius:3px; cursor:pointer; z-index:200;
+}
+#back-btn:hover { background:rgba(50,50,50,0.85); }
+
+/* ── CONTROLS ── */
+.controls { position:absolute; bottom:20px; left:16px; display:grid; grid-template-columns:44px 44px 44px; grid-template-rows:44px 44px; gap:5px; z-index:150; }
+.btn { background:rgba(20,10,10,0.88); color:#cc9090; border:1px solid #553333; border-radius:8px; font-size:16px; display:flex; align-items:center; justify-content:center; cursor:pointer; user-select:none; touch-action:none; }
+.btn:active { background:rgba(60,20,20,0.9); }
+.up{grid-column:2;grid-row:1;}.left{grid-column:1;grid-row:2;}.down{grid-column:2;grid-row:2;}.right{grid-column:3;grid-row:2;}
+.interact { position:absolute; bottom:24px; right:20px; width:64px; height:64px; background:rgba(20,10,10,0.92); border-radius:50%; border:2px solid #664444; z-index:150; cursor:pointer; display:flex; align-items:center; justify-content:center; color:#ff9090; font-size:11px; font-family:monospace; user-select:none; }
+.interact:active { background:rgba(60,20,20,0.9); }
+</style>
+</head>
+<body>
+<div class="game" id="game">
+  <div class="scene">
+    <!-- dust particles -->
+    <div class="dust" style="top:30%;left:20%;animation-delay:0s;"></div>
+    <div class="dust" style="top:20%;left:70%;animation-delay:1s;"></div>
+    <div class="dust" style="top:40%;left:50%;animation-delay:1.8s;"></div>
+    <div class="dust" style="top:15%;left:35%;animation-delay:0.5s;"></div>
+  </div>
+
+  <!-- DOLL -->
+  <div class="doll" id="doll">
+    <!-- HEAD (top of head = head click zone) -->
+    <div class="doll-head" id="zone-head">
+      <div class="doll-eyes" id="zone-eyes">
+        <div class="eye left" id="eye-left"></div>
+        <div class="eye right" id="eye-right"></div>
+      </div>
+      <div class="doll-mouth" id="zone-mouth">
+        <div class="mouth-shape" id="mouth-shape"></div>
+      </div>
+    </div>
+
+    <!-- ARMS -->
+    <div class="doll-arm left"  id="zone-arm-left"></div>
+    <div class="doll-arm right" id="zone-arm-right"></div>
+
+    <!-- BODY -->
+    <div class="doll-body" id="zone-body">
+      <div class="doll-stomach" id="zone-stomach"></div>
+    </div>
+
+    <!-- LEGS -->
+    <div class="doll-leg left"  id="zone-leg-left"></div>
+    <div class="doll-leg right" id="zone-leg-right"></div>
+  </div>
+
+  <!-- CURSOR -->
+  <div class="cursor" id="cursor"></div>
+
+  <!-- PLAYER SAY -->
+  <div class="player-say" id="player-say"></div>
+
+  <!-- LAUGHTER OVERLAY -->
+  <div class="laugh-overlay" id="laugh-overlay">
+    <div class="laugh-text" style="top:5%;animation-duration:1.1s;">WHAHAHAHAHAHAHHAHA</div>
+    <div class="laugh-text" style="top:22%;animation-duration:0.9s;animation-delay:0.3s;">WHAHAHAHAHAHAHHAHA</div>
+    <div class="laugh-text" style="top:40%;animation-duration:1.3s;animation-delay:0.1s;">WHAHAHAHAHAHAHHAHA</div>
+    <div class="laugh-text" style="top:58%;animation-duration:1.0s;animation-delay:0.5s;">WHAHAHAHAHAHAHHAHA</div>
+    <div class="laugh-text" style="top:75%;animation-duration:1.2s;animation-delay:0.2s;">WHAHAHAHAHAHAHHAHA</div>
+  </div>
+
+  <!-- BACK BUTTON -->
+  <button id="back-btn">← Basement</button>
+
+  <!-- CONTROLS -->
+  <div class="controls">
+    <button class="btn up">↑</button>
+    <button class="btn left">←</button>
+    <button class="btn down">↓</button>
+    <button class="btn right">→</button>
+  </div>
+  <button class="interact" id="interact-btn">●</button>
+</div>
+
+<script>
+const cursorEl   = document.getElementById('cursor');
+const game       = document.getElementById('game');
+const playerSay  = document.getElementById('player-say');
+const laughOverlay = document.getElementById('laugh-overlay');
+const mouthShape = document.getElementById('mouth-shape');
+const eyeLeft    = document.getElementById('eye-left');
+const eyeRight   = document.getElementById('eye-right');
+
+let cx = 180, cy = 320;
+const SPEED = 3;
+let keys = {up:false,down:false,left:false,right:false};
+
+// State
+let eyeTouchCount = 0;
+let eyesGlowing   = false;
+let mouthState    = 'none'; // none, smile, frown
+let laughing      = false;
+let sayTimeout    = null;
+
+/* ── CURSOR MOVE ── */
+function update() {
+  if(keys.up)    cy -= SPEED;
+  if(keys.down)  cy += SPEED;
+  if(keys.left)  cx -= SPEED;
+  if(keys.right) cx += SPEED;
+  cx = Math.max(0, Math.min(360-24, cx));
+  cy = Math.max(0, Math.min(640-30, cy));
+  cursorEl.style.left = cx + 'px';
+  cursorEl.style.top  = cy + 'px';
+
+  // check hover highlight
+  checkHover();
+  requestAnimationFrame(update);
+}
+update();
+
+/* ── HIT DETECTION ── */
+// Each zone: {id, x,y,w,h}  (relative to game viewport)
+// Doll is bottom:140px, left:50%-80px = 100px, width=160px
+const DOLL_LEFT = 100;
+const DOLL_BOT  = 140;
+const GH = 640;
+
+function dollY(topFromDollTop) {
+  return GH - DOLL_BOT - 260 + topFromDollTop;
+}
+
+const zones = [
+  { id:'zone-head',     x:DOLL_LEFT+35,  y:dollY(0),   w:90,  h:82,  key:'head'      },
+  { id:'zone-eyes',     x:DOLL_LEFT+48,  y:dollY(26),  w:64,  h:20,  key:'eyes'      },
+  { id:'zone-mouth',    x:DOLL_LEFT+64,  y:dollY(56),  w:32,  h:14,  key:'mouth'     },
+  { id:'zone-arm-left', x:DOLL_LEFT+14,  y:dollY(90),  w:24,  h:72,  key:'arm-left'  },
+  { id:'zone-arm-right',x:DOLL_LEFT+122, y:dollY(90),  w:24,  h:72,  key:'arm-right' },
+  { id:'zone-stomach',  x:DOLL_LEFT+45,  y:dollY(112), w:70,  h:40,  key:'stomach'   },
+  { id:'zone-body',     x:DOLL_LEFT+45,  y:dollY(82),  w:70,  h:90,  key:'body'      },
+  { id:'zone-leg-left', x:DOLL_LEFT+32,  y:dollY(166), w:24,  h:76,  key:'leg-left'  },
+  { id:'zone-leg-right',x:DOLL_LEFT+104, y:dollY(166), w:24,  h:76,  key:'leg-right' },
+];
+
+function getHit() {
+  // Priority order — smaller/more specific zones first
+  const priority = ['eyes','mouth','stomach','arm-left','arm-right','leg-left','leg-right','head'];
+  for(const key of priority) {
+    const z = zones.find(z=>z.key===key);
+    if(!z)continue;
+    if(cx+12>=z.x && cx+12<=z.x+z.w && cy+12>=z.y && cy+12<=z.y+z.h) return z;
+  }
+  return null;
+}
+
+function checkHover() {
+  const hit = getHit();
+  document.querySelectorAll('.doll *').forEach(el=>el.style.filter='');
+  if(hit) {
+    const el = document.getElementById(hit.id);
+    if(el) el.style.filter='brightness(1.3)';
+  }
+}
+
+/* ── INTERACTION ── */
+function interact() {
+  const hit = getHit();
+  if(!hit) return;
+  handleZone(hit.key);
+}
+
+function handleZone(key) {
+  if(laughing) return;
+
+  switch(key) {
+    case 'arm-right':
+      playerSpeak('"How do you do"');
+      dollReply('im good', 'right');
+      animArm('right');
+      break;
+    case 'arm-left':
+      playerSpeak('*waves its hand*  "Hi"');
+      dollReply('hellooo', 'left');
+      animArm('left');
+      break;
+    case 'leg-left':
+      playerSpeak('"Tickle tickle"');
+      dollReply('hahahahaha', 'left');
+      break;
+    case 'leg-right':
+      playerSpeak('"Tickle tickle tickle"');
+      dollReply('stop it', 'right');
+      break;
+    case 'eyes': {
+      eyeTouchCount++;
+      const sayOpts = ['"poke"', '"smooth black pearl eyes"', '"stop looking at me"'];
+      playerSpeak(sayOpts[Math.floor(Math.random()*sayOpts.length)]);
+      const replyOpts = ['my eyes!','thank you','no eyelids'];
+      dollReply(replyOpts[Math.floor(Math.random()*replyOpts.length)], Math.random()<0.5?'left':'right');
+      if(eyeTouchCount>=3 && !eyesGlowing) {
+        eyesGlowing = true;
+        eyeLeft.classList.add('glow');
+        eyeRight.classList.add('glow');
+        // Eyes track cursor crudely via transform
+        startEyeTracking();
+      }
+      break;
+    }
+    case 'mouth': {
+      const states = ['smile','frown','none'];
+      const next = states.filter(s=>s!==mouthState);
+      mouthState = next[Math.floor(Math.random()*next.length)];
+      mouthShape.className = 'mouth-shape ' + mouthState;
+      break;
+    }
+    case 'stomach': {
+      playerSpeak('');
+      showLaughter();
+      break;
+    }
+    case 'head':
+      playerSpeak('"Pat pat pat"');
+      dollReply('(⁠≧▽≦⁠)', 'right');
+      animPat();
+      break;
+    case 'body':
+      playerSpeak('"..."');
+      break;
+  }
+}
+
+/* ── PLAYER SPEAK ── */
+function playerSpeak(text) {
+  if(sayTimeout) clearTimeout(sayTimeout);
+  playerSay.textContent = text;
+  playerSay.style.display = 'block';
+  playerSay.style.animation = 'none';
+  void playerSay.offsetHeight;
+  playerSay.style.animation = 'fadeDialog 2.2s ease-out forwards';
+  sayTimeout = setTimeout(()=>{ playerSay.style.display='none'; }, 2200);
+}
+
+/* ── DOLL REPLY FLOAT ── */
+function dollReply(text, side) {
+  const el = document.createElement('div');
+  el.className = 'float-text';
+  el.textContent = `[ ${text} ]`;
+  // Position: top area, left or right
+  el.style.top  = (40 + Math.random()*60) + 'px';
+  el.style.fontSize = (11 + Math.random()*5) + 'px';
+  if(side==='left') { el.style.left = (10 + Math.random()*60)+'px'; }
+  else              { el.style.right = (10 + Math.random()*60)+'px'; }
+  game.appendChild(el);
+  setTimeout(()=>el.remove(), 3100);
+}
+
+/* ── LAUGHTER ── */
+function showLaughter() {
+  laughing = true;
+  laughOverlay.style.display='block';
+  setTimeout(()=>{ laughOverlay.style.display='none'; laughing=false; }, 4000);
+}
+
+/* ── EYE TRACKING ── */
+let eyeTrackInterval = null;
+function startEyeTracking() {
+  if(eyeTrackInterval) return;
+  eyeTrackInterval = setInterval(()=>{
+    if(!eyesGlowing) { clearInterval(eyeTrackInterval); return; }
+    const dollCX = 180; // approximate center of doll head on screen
+    const dollCY = 200;
+    const angle = Math.atan2(cy - dollCY, cx - dollCX);
+    const ex = Math.cos(angle)*3, ey = Math.sin(angle)*3;
+    [eyeLeft, eyeRight].forEach(eye => {
+      eye.style.boxShadow = `${ex*4}px ${ey*4}px 12px 6px rgba(255,0,0,0.6), 0 0 30px 10px rgba(200,0,0,0.3)`;
+    });
+  }, 80);
+}
+
+/* ── ANIMATIONS ── */
+function animArm(side) {
+  const el = document.getElementById('zone-arm-'+side);
+  if(!el)return;
+  const orig = el.style.transform;
+  let t = 0;
+  const wave = setInterval(()=>{
+    t += 0.4;
+    const r = (side==='left'?12:-12) + Math.sin(t)*20;
+    el.style.transform = `rotate(${r}deg)`;
+    if(t>6) { clearInterval(wave); el.style.transform = orig; }
+  }, 60);
+}
+
+function animPat() {
+  const el = document.getElementById('zone-head');
+  if(!el)return;
+  let t=0;
+  const pat = setInterval(()=>{
+    t++;
+    el.style.transform = `translateX(-50%) translateY(${t%2===0?-3:0}px)`;
+    if(t>6){ clearInterval(pat); el.style.transform='translateX(-50%)'; }
+  },80);
+}
+
+/* ── BACK BUTTON ── */
+document.getElementById('back-btn').addEventListener('click', ()=>{
+  // floating farewell
+  const el = document.createElement('div');
+  el.className = 'float-text';
+  el.textContent = '[ where are you going ]';
+  el.style.top = '35%';
+  el.style.left = '50%';
+  el.style.transform = 'translateX(-50%)';
+  el.style.fontSize = '14px';
+  el.style.color = 'rgba(255,255,255,0.22)';
+  el.style.animation = 'floatUp 2s ease-out forwards';
+  game.appendChild(el);
+  setTimeout(()=>{ window.location.href='basement.html'; }, 1600);
+});
+
+/* ── INPUT ── */
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowUp'){keys.up=true;e.preventDefault();}
+  if(e.key==='ArrowDown'){keys.down=true;e.preventDefault();}
+  if(e.key==='ArrowLeft'){keys.left=true;e.preventDefault();}
+  if(e.key==='ArrowRight'){keys.right=true;e.preventDefault();}
+  if(e.key==='e'||e.key==='Enter')interact();
+});
+document.addEventListener('keyup',e=>{
+  if(e.key==='ArrowUp')keys.up=false;if(e.key==='ArrowDown')keys.down=false;
+  if(e.key==='ArrowLeft')keys.left=false;if(e.key==='ArrowRight')keys.right=false;
+});
+function bindBtn(sel,key){const b=document.querySelector(sel);if(!b)return;b.addEventListener('touchstart',e=>{e.preventDefault();keys[key]=true},{passive:false});b.addEventListener('touchend',e=>{e.preventDefault();keys[key]=false},{passive:false});b.addEventListener('mousedown',()=>keys[key]=true);b.addEventListener('mouseup',()=>keys[key]=false);b.addEventListener('mouseleave',()=>keys[key]=false);}
+bindBtn('.up','up');bindBtn('.down','down');bindBtn('.left','left');bindBtn('.right','right');
+document.getElementById('interact-btn').addEventListener('click',interact);
+</script>
+</body>
+</html>
