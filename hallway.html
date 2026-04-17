@@ -364,8 +364,9 @@ function interact() {
             <button onclick="window.location.href='livingroom.html'">Go In</button>
             <button onclick="closeDialog()">Stay</button>`);
     } else if(obj.id === 'door-neighbor') {
-        showDialog(`${text} It's locked.<br><br>
-            <button onclick="closeDialog()">OK</button>`);
+        showDialog(`${text}<br><br>
+            <button onclick="window.location.href='neighbor.html'">Go In</button>
+            <button onclick="closeDialog()">Stay</button>`);
     }
 }
 
